@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block body %}
+<section class="register">
+<div class="registration-container">
+  <!-- Logo above the Register heading -->
+  <img src="{{ url_for('static', filename='assets/images/logo.png') }}" alt="Logo" class="logo-img">
+
+  <h2>Welcome to Gainingreat</h2>
+  <form method="POST">
+    {{ form.hidden_tag() }}  <!-- Include hidden fields (e.g., CSRF token)--> 
+    <div class="register-form-group">
+      {{ form.name.label }}<br>
+      {{ form.name(size=32) }}  <!-- Render the email field -->
+      {% if form.name.errors %}
+        <span style="color: red;">{{ form.name.errors[0] }}</span>
+      {% endif %}
+    </div>
+    <div class="register-form-group">
+      {{ form.country.label }}<br>
+      {{ form.country(size=32) }}
+      {% if form.country.errors %}
+          <span style="color: red;">{{ form.country.errors[0] }}</span>
+      {% endif %}
+  </div>
+    <div class="register-form-group">
+      {{ form.email.label }}<br>
+      {{ form.email(size=32) }}  <!-- Render the email field -->
+      {% if form.email.errors %}
+        <span style="color: red;">{{ form.email.errors[0] }}</span>
+      {% endif %}
+    </div>
+    <div class="register-form-group">
+      {{ form.password.label }}<br>
+      {{ form.password(size=32) }}  <!-- Render the password field -->
+      {% if form.password.errors %}
+        <span style="color: red;">{{ form.password.errors[0] }}</span>
+      {% endif %}
+    </div>
+    <div class="register-form-group">
+      {{ form.confirm_password.label }}<br>
+      {{ form.confirm_password(size=32) }}  <!-- Render the confirm password field -->
+      {% if form.confirm_password.errors %}
+        <span style="color: red;">{{ form.confirm_password.errors[0] }}</span>
+      {% endif %}
+    </div>
+    <div>
+      <!-- This will render the button with classes applied -->
+{{ form.submit(class="register-submit-button") }}
+ <!-- Render the submit button -->
+    </div>
+  </form>
+  <a class="login-link" ahref="{{ url_for('login') }}" >Already have an account? Login</a>
+  </div>
+</section>
+{% endblock %}

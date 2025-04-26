@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+{% block body %}
+
+<section class="plan">
+    <!-- Back to Dashboard Button -->
+    <div class="back-to-dashboard">
+        <a href="{{ url_for('dashboard', username=current_user.username) }}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+
+    <!--<div class="container">
+        <h1>Select Your Plan</h1>
+        <div class="pricing-table">
+            <!-- Free Plan 
+            <div class="pricing-card">
+                <h2>Free</h2>
+                <div class="price">$0</div>
+                <div class="billing-frequency">Forever</div>
+                <ul>
+                    <li>Max Websites: 1</li>
+                    <li>Max URLs per Website: 50</li>
+                    <li>Basic Features</li>
+                </ul>
+                <button class="btn" onclick="initiatePayment({{ plans[0].id }}, {{ plans[0].price }})">Get Started</button>
+            </div>
+
+            <!-- Basic Plan 
+            <div class="pricing-card popular">
+                <h2>Basic</h2>
+                <div class="price">$15</div>
+                <div class="billing-frequency">Monthly</div>
+                <ul>
+                    <li>Max Websites: 6</li>
+                    <li>Unlimited URLs</li>
+                    <li>Advanced Features</li>
+                </ul>
+                <button class="btn" onclick="initiatePayment({{ plans[1].id }}, {{ plans[1].price }})">Choose Plan</button>
+            </div>
+
+            <!-- Pro Plan 
+            <div class="pricing-card">
+                <h2>Pro</h2>
+                <div class="price">$25</div>
+                <div class="billing-frequency">Monthly</div>
+                <ul>
+                    <li>Max Websites: 20</li>
+                    <li>Unlimited URLs</li>
+                    <li>Premium Features</li>
+                </ul>
+                <button class="btn" onclick="initiatePayment({{ plans[2].id }}, {{ plans[2].price }})">Choose Plan</button>
+            </div>
+        </div>-->
+        <div class="pricing-table">
+            <!-- Free Plan -->
+            <div class="pricing-card">
+                <h2>Free</h2>
+                <div class="price">$0</div>
+                <div class="billing-frequency">1 Month</div>
+                <ul>
+                    <li>Max URLs: 500</li>
+                    <li>Basic Features</li>
+                    <li>No Moz Metrics</li>
+                </ul>
+                <button class="btn" onclick="initiatePayment({{ plans[0].id }}, {{ plans[0].price }})">Get Started</button>
+            </div>
+        
+            <!-- Basic Plan -->
+            <div class="pricing-card popular">
+                <div class="ribbon">Popular</div>
+                <h2>Basic</h2>
+                <div class="price">$20</div>
+                <div class="billing-frequency">1 Month</div>
+                <ul>
+                    <li>Max URLs: 5,000</li>
+                    <li>Includes Moz Metrics</li>
+                    <li>Advanced Features</li>
+                </ul>
+                <button class="btn" onclick="initiatePayment({{ plans[1].id }}, {{ plans[1].price }})">Choose Plan</button>
+            </div>
+        
+            <!-- Pro Plan -->
+            <div class="pricing-card">
+                <h2>Pro</h2>
+                <div class="price">$50</div>
+                <div class="billing-frequency">1 Month</div>
+                <ul>
+                    <li>Max URLs: 20,000</li>
+                    <li>Includes Moz Metrics</li>
+                    <li>Premium Features</li>
+                </ul>
+                <button class="btn" onclick="initiatePayment({{ plans[2].id }}, {{ plans[2].price }})">Choose Plan</button>
+            </div>
+        </div>
+        <div class="container py-5">
+            <h2 class="text-center mb-4">Choose Your Plan</h2>
+            <div class="row justify-content-center">
+              {% for plan in plans %}
+              <div class="col-md-4">
+                <div class="card mb-4 shadow-sm">
+                  <div class="card-body">
+                    <h5 class="card-title">{{ plan.name }}</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">${{ plan.price }}</h6>
+                    <p class="card-text">Analyze up to <strong>{{ plan.max_urls }}</strong> URLs</p>
+                    <p class="card-text">Valid for <strong>{{ plan.duration or 1 }}</strong> month(s)</p>
+                    <form action="{{ url_for('create_razorpay_order', plan_id=plan.id) }}" method="post">
+                      <button type="submit" class="btn btn-primary w-100">Choose {{ plan.name }}</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+      
+        
+
+        <!-- Custom Plan Section -->
+        <div class="custom-plan-section">
+            <h3>Need a Custom Plan?</h3>
+            <p>Contact us for a plan tailored to your needs.</p>
+            <a href="mailto:support@gainingreat.com?subject=Custom Plan Inquiry&body=Hi, I am interested in a custom plan. Please provide more details." class="btn">
+                Request Custom Plan
+            </a>
+        </div>
+    </div>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        function initiatePayment(planId, price) {
+            fetch(`/create_paypal_payment/${planId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                // Redirect to PayPal for payment
+                window.location.href = data.redirect_url;
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("An error occurred while initiating payment.");
+            });
+        }
+
+        <!-- Add this script to select_plan.html -->
+
+
+    function initiatePayment(planId, price) {
+        // Check if user is from India (you should pass this from backend)
+        const isIndianUser = {{ 'true' if current_user.country.lower() == 'india' else 'false' }};
+        
+        if (isIndianUser) {
+            // Use Razorpay for Indian users
+            fetch(`/create_razorpay_order/${planId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const options = {
+                        key: data.key,
+                        amount: data.amount,
+                        currency: data.currency,
+                        name: "Your Company Name",
+                        description: "Plan Purchase",
+                        order_id: data.order_id,
+                        handler: function(response) {
+                            verifyRazorpayPayment(response, data.plan_id);
+                        },
+                        theme: {
+                            color: "#F37254"
+                        }
+                    };
+                    const rzp = new Razorpay(options);
+                    rzp.open();
+                } else {
+                    alert(data.error || "Error creating order");
+                }
+            });
+        } else {
+            // Use PayPal for non-Indian users
+            fetch(`/create_paypal_payment/${planId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                window.location.href = data.redirect_url;
+            });
+        }
+    }
+
+    function verifyRazorpayPayment(response, planId) {
+        fetch('/verify_razorpay_payment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+                plan_id: planId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = "{{ url_for('dashboard', username=current_user.email) }}";
+            } else {
+                alert('Payment verification failed: ' + data.error);
+            }
+        });
+    }
+
+    </script>
+    </section>
+
+{% endblock %}

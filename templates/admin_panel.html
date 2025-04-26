@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Admin Panel - Custom Plans</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Admin Panel - Manage Custom Plans</h2>
+        
+        <!-- Form to create a custom plan -->
+        <form method="POST">
+            <div class="form-group">
+                <label>Email:</label>
+                <input type="email" name="email" class="form-control" required>
+                <small id="emailError" class="text-danger"></small> <!-- Error message -->
+    
+            </div>
+            <div class="form-group">
+                <label>Plan Amount ($):</label>
+                <input type="number" step="0.01" name="amount" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Max Websites:</label>
+                <input type="number" name="max_websites" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Duration (months):</label>
+                <input type="number" name="duration" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Create Custom Plan</button>
+        </form>
+
+        <h3>Existing Custom Plans</h3>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th>Amount ($)</th>
+            <th>Websites</th>
+            <th>Duration (months)</th>
+            <th>Payment Link</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% if custom_plans %}
+            {% for plan in custom_plans %}
+                <tr>
+                    <td>{{ plan.email }}</td>
+                    <td>{{ plan.amount }}</td>
+                    <td>{{ plan.max_websites }}</td>
+                    <td>{{ plan.duration }}</td>
+                    <td>
+                        {% if plan.status == "Pending" %}
+                            <a href="{{ plan.stripe_payment_link }}" class="btn btn-success" target="_blank">Pay Now</a>
+                        {% else %}
+                            <span class="text-muted">Payment Completed</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if plan.status == "Paid" %}
+                            <span class="badge badge-success">Paid</span>
+                        {% else %}
+                            <span class="badge badge-danger">Pending</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td colspan="6" class="text-center">No custom plans found.</td>
+            </tr>
+        {% endif %}
+    </tbody>
+</table>
+
+    </div>
+
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $("input[name='email']").on("input", function() {
+                var email = $(this).val();
+                if (email.length > 5) {  // Basic check to prevent unnecessary requests
+                    $.ajax({
+                        url: "/check_email",
+                        type: "POST",
+                        contentType: "application/json",
+                        data: JSON.stringify({ email: email }),
+                        success: function(response) {
+                            if (response.registered) {
+                                $("#emailError").text("");  // Clear error message
+                                $("button[type='submit']").prop("disabled", false); // Enable button
+                            } else {
+                                $("#emailError").text("❌ This email is not registered. Please use a registered email.");
+                                $("button[type='submit']").prop("disabled", true); // Disable button
+                            }
+                        }
+                    });
+                } else {
+                    $("#emailError").text("");
+                    $("button[type='submit']").prop("disabled", true);
+                }
+            });
+        });
+    </script>
+    
+    <script>
+        // Handle Razorpay payment success (if using Razorpay modal)
+        function handlePaymentSuccess(planId, paymentId, orderId, signature) {
+            fetch(`/payment_success_admin/${planId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    razorpay_payment_id: paymentId,
+                    razorpay_order_id: orderId,
+                    razorpay_signature: signature,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Payment successful! Plan activated.");
+                    window.location.reload(); // Refresh the page to update the status
+                } else {
+                    alert("Payment verification failed. Please contact support.");
+                }
+            });
+        }
+
+        // Initialize Razorpay modal (if using modal instead of payment link)
+        function initiateRazorpayPayment(planId, amount, email) {
+            const options = {
+                key: "{{ razorpay_key_id }}", // Replace with your Razorpay key ID
+                amount: amount * 100, // Amount in paise
+                currency: "INR",
+                name: "Custom Plan Payment",
+                description: "Payment for custom plan",
+                order_id: "order_XXXXXX", // Replace with actual order ID
+                handler: function(response) {
+                    handlePaymentSuccess(planId, response.razorpay_payment_id, response.razorpay_order_id, response.razorpay_signature);
+                },
+                prefill: {
+                    email: email,
+                },
+                theme: {
+                    color: "#F37254",
+                },
+            };
+            const rzp = new Razorpay(options);
+            rzp.open();
+        }
+    </script>
+</body>
+</html>

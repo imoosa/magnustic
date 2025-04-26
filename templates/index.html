@@ -1,0 +1,105 @@
+
+{% extends "base.html" %}
+{% block body %}
+<section class="index">
+    <div class="index-container">
+        <h1>Single URL SEO Analysis</h1>
+        <!-- Full website analysis prompt -->
+        <div class="full-site-prompt">
+            <p>If you want to analyze a full website, please click below:</p>
+            <a href="{{ url_for('login') }}" class="full-site-btn">Analyze Full Website</a>
+        </div>
+
+        <!-- Form for entering a URL -->
+        <form method="POST" action="{{ url_for('analyze_single_url') }}">
+            {{ form.hidden_tag() }} 
+            <div class="single-form-group">
+                <label for="url">Enter URL to Analyze:</label>
+                <input type="text" id="url" name="url" placeholder="Enter URL" required>
+            </div>
+            <button type="submit" class="index-btn">Analyze</button>
+        </form>
+        
+        <!-- Display analysis results in collapsible sections -->
+        {% if metrics %}
+            <h2>Analysis Results</h2>
+            
+            <!-- Meta Data -->
+            <button class="accordion">Meta Data</button>
+            <div class="panel">
+                <p><strong>Meta Title:</strong> {{ metrics["Meta Title"][0] }}</p>
+                <p><strong>Meta Description:</strong> {{ metrics["Meta Description"][0] }}</p>
+                <p><strong>Canonical Tag:</strong> {{ metrics["Canonical Tag"][0] }}</p>
+            </div>
+
+            <!-- Content Analysis -->
+            <button class="accordion">Content Analysis</button>
+            <div class="panel">
+                <p><strong>Word Count:</strong> {{ metrics["Word Count"][0] }}</p>
+                <p><strong>H1 Tags:</strong> {{ metrics["H1 Tags"][0] }}</p>
+                <p><strong>H2 Tags:</strong> {{ metrics["H2 Tags"][0] }}</p>
+            </div>
+
+            <!-- Image Details -->
+            <button class="accordion">Image Details</button>
+            <div class="panel">
+                <p><strong>Largest Image Name:</strong> {{ metrics["Largest Image Name"][0] }}</p>
+                <p><strong>Largest Image Size (KB):</strong> {{ metrics["Largest Image Size (KB)"][0] }}</p>
+            </div>
+
+            <!-- Structured Data -->
+            <button class="accordion">Structured Data</button>
+            <div class="panel">
+                <p><strong>Structured Data:</strong> {{ metrics["Structured Data"][0] }}</p>
+            </div>
+
+            <!-- Links -->
+            <button class="accordion">Links</button>
+            <div class="panel">
+                <p><strong>Internal Links:</strong> {{ metrics["Internal Links"][0] }}</p>
+                <p><strong>External Links:</strong> {{ metrics["External Links"][0] }}</p>
+                <p><strong>Broken Links:</strong> {{ metrics["Broken Links"][0] }}</p>
+            </div>
+
+            <!-- Performance Metrics -->
+            <button class="accordion">Performance Metrics (Desktop)</button>
+            <div class="panel">
+                <p><strong>Performance Score:</strong> {{ metrics["Performance Score (Desktop)"][0] }}</p>
+                <p><strong>First Contentful Paint:</strong> {{ metrics["First Contentful Paint (Desktop)"][0] }}</p>
+                <p><strong>Speed Index:</strong> {{ metrics["Speed Index (Desktop)"][0] }}</p>
+                <p><strong>Time to Interactive:</strong> {{ metrics["Time to Interactive (Desktop)"][0] }}</p>
+                <p><strong>First Meaningful Paint:</strong> {{ metrics["First Meaningful Paint (Desktop)"][0] }}</p>
+                <p><strong>CLS Lighthouse:</strong> {{ metrics["CLS Lighthouse (Desktop)"][0] }}</p>
+                <p><strong>LCP Lighthouse:</strong> {{ metrics["LCP Lighthouse (Desktop)"][0] }}</p>
+            </div>
+
+            <button class="accordion">Performance Metrics (Mobile)</button>
+            <div class="panel">
+                <p><strong>Performance Score:</strong> {{ metrics["Performance Score (Mobile)"][0] }}</p>
+                <p><strong>First Contentful Paint:</strong> {{ metrics["First Contentful Paint (Mobile)"][0] }}</p>
+                <p><strong>Speed Index:</strong> {{ metrics["Speed Index (Mobile)"][0] }}</p>
+                <p><strong>Time to Interactive:</strong> {{ metrics["Time to Interactive (Mobile)"][0] }}</p>
+                <p><strong>First Meaningful Paint:</strong> {{ metrics["First Meaningful Paint (Mobile)"][0] }}</p>
+                <p><strong>CLS Lighthouse:</strong> {{ metrics["CLS Lighthouse (Mobile)"][0] }}</p>
+                <p><strong>LCP Lighthouse:</strong> {{ metrics["LCP Lighthouse (Mobile)"][0] }}</p>
+            </div>
+        {% else %}
+            <p>No analysis results available.</p>
+        {% endif %}
+    </div>
+
+    <script>
+        document.querySelectorAll('.accordion').forEach(button => {
+            button.addEventListener('click', function() {
+                this.classList.toggle('active');
+                var panel = this.nextElementSibling;
+                if (panel.style.display === "block") {
+                    panel.style.display = "none";
+                } else {
+                    panel.style.display = "block";
+                }
+            });
+        });
+    </script>
+</section>
+{% endblock %}

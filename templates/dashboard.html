@@ -1,0 +1,602 @@
+{% extends "base.html" %}
+{% block body %}
+   <section class="dashboard">
+    <div class="dashboard-container">
+        <!-- Header Section -->
+        <div class="header-section">
+            <h1>Dashboard</h1>
+            <div>
+                <span class="mr-3">Welcome, {{ current_user.name }}</span>
+            </div>
+        </div>
+
+        <!-- Plan Information -->
+        <div class="plan-info">
+            <span><strong>Your Plan:</strong> {{ plan.name if plan else "No Plan Selected" }}</span>
+            <span class="separator">|</span>
+            <span><strong>Total URLs Remaining:</strong> {{ urls_remaining }}</span>
+            {% if remaining_days is not none %}
+                <span class="separator">|</span>
+                <span><strong>Remaining Days:</strong> {{ remaining_days }} days</span>
+            {% endif %}
+            <a href="{{ url_for('select_plan') }}" class="btn btn-warning btn-sm">Upgrade Plan</a>
+        </div>
+
+        <!-- URL Input Form -->
+        <form method="POST" action="{{ url_for('analyze') }}" class="mb-4">
+            {{ form.hidden_tag() }} 
+            <div class="dashboard-form-group">
+                <label for="url">Enter URL to Analyze:</label>
+                {{ form.url(class="form-control", placeholder="Enter a website URL") }}
+            </div>
+            <button type="submit" class="btn btn-primary">Analyze</button>
+        </form>
+
+        <!-- Processing Container -->
+        <div class="processing-container" id="processingContainer" style="display: none;">
+            <div class="processing-header">
+                <p id="progressText">Analyzing...</p>
+                <button id="cancelBtn" class="btn btn-danger btn-sm" onclick="cancelAnalysis()">Cancel</button>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress">
+                    <div id="progressBarInner" class="progress-bar" style="width: 0%;"></div>
+                    <div id="slantLines" class="slant-lines"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Display Analysis Results -->
+        {% if latest_analysis and latest_analysis.metrics %}
+            <div class="metrics-section">
+                <!-- Grade Card -->
+                <div class="metric-card">
+                    <h3>Website Grade</h3>
+                    <div class="grade-display grade-{{ latest_analysis.grade|lower }}">
+                        {{ latest_analysis.grade }}
+                    </div>
+                    <div class="grade-description">
+                        {% if latest_analysis.grade == 'A' %}
+                            Excellent SEO performance
+                        {% elif latest_analysis.grade == 'B' %}
+                            Good SEO performance
+                        {% elif latest_analysis.grade == 'C' %}
+                            Average SEO performance
+                        {% elif latest_analysis.grade == 'D' %}
+                            Below average SEO performance
+                        {% else %}
+                            Poor SEO performance
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Moz Metrics -->
+                <div class="metric-card">
+                    <h3>Moz Metrics</h3>
+                    <div class="metrics-grid">
+                        {% if latest_analysis.moz_metrics %}
+                            <div class="metric-item">
+                                <span class="metric-label">Domain Authority</span>
+                                <span class="metric-value">{{ latest_analysis.moz_metrics.get('Domain Authority', 'N/A') }}</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Page Authority</span>
+                                <span class="metric-value">{{ latest_analysis.moz_metrics.get('Page Authority', 'N/A') }}</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Spam Score</span>
+                                <span class="metric-value">{{ latest_analysis.moz_metrics.get('Spam Score', 'N/A') }}</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Backlink Domains</span>
+                                <span class="metric-value">{{ latest_analysis.moz_metrics.get('Backlink Domain', 'N/A') }}</span>
+                            </div>
+                        {% else %}
+                            <div class="no-data">No Moz metrics available</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Page Speed Metrics -->
+                <div class="metric-card">
+                    <h3>Page Speed Metrics</h3>
+                    <div class="metrics-grid">
+                        <div class="metric-item">
+                            <span class="metric-label">Performance Score</span>
+                            <span class="metric-value">{{ "%.1f"|format(latest_analysis.metrics['Performance Score (Desktop)'][0]) }}</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">First Contentful Paint</span>
+                            <span class="metric-value">{{ latest_analysis.metrics['First Contentful Paint (Desktop)'][0] }}</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Speed Index</span>
+                            <span class="metric-value">{{ latest_analysis.metrics['Speed Index (Desktop)'][0] }}</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Time to Interactive</span>
+                            <span class="metric-value">{{ latest_analysis.metrics['Time to Interactive (Desktop)'][0] }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEO Metrics Table -->
+            <div class="seo-metrics-section">
+                <h3>SEO Metrics</h3>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-compact">
+                        <thead>
+                            <tr>
+                                <th>URL</th>
+                                <th>Meta Title</th>
+                                <th>Meta Description</th>
+                                <th>Image Size</th>
+                                <th>Structured Data</th>
+                                <th>Internal Links</th>
+                                <th>External Links</th>
+                                <th>H1 Tags</th>
+                                <th>H2 Tags</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for i in range(5) if latest_analysis.metrics['URL']|length > i %}
+                                <tr>
+                                    <td class="url-cell">{{ latest_analysis.metrics['URL'][i]|truncate(30) }}</td>
+                                    <td>{{ latest_analysis.metrics['Meta Title'][i]|truncate(50) }}</td>
+                                    <td>{{ latest_analysis.metrics['Meta Description'][i]|truncate(70) }}</td>
+                                    <td>{{ latest_analysis.metrics['Largest Image Size (KB)'][i] }}</td>
+                                    <td>{{ latest_analysis.metrics['Structured Data'][i] }}</td>
+                                    <td>{{ latest_analysis.metrics['Internal Links'][i] }}</td>
+                                    <td>{{ latest_analysis.metrics['External Links'][i] }}</td>
+                                    <td>{{ latest_analysis.metrics['H1 Tags'][i]|truncate(30) }}</td>
+                                    <td>{{ latest_analysis.metrics['H2 Tags'][i]|truncate(30) }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if latest_analysis.excel_file %}
+                    <div class="download-button">
+                        <a href="{{ url_for('download', analysis_id=latest_analysis.id) }}" class="btn btn-success">Download Complete Report</a>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <!-- Analyzed Sites Table -->
+        <h3>Analyzed Sites</h3>
+        <div class="table-responsive">
+            <table class="table table-bordered table-compact">
+                <thead>
+                    <tr>
+                        <th>S.No.</th>
+                        <th>Website Name</th>
+                        <th>URL</th>
+                        <th>Date Analyzed</th>
+                        <th>Excel File</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for site in analyzed_sites %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ site.website_name }}</td>
+                            <td class="url-cell">{{ site.url|truncate(30) }}</td>
+                            <td>{{ site.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                {% if site.excel_file %}
+                                    <a href="{{ url_for('download', analysis_id=site.id) }}" class="btn btn-sm btn-success">Download</a>
+                                {% else %}
+                                    No file available
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    
+
+    <script>
+   
+   /*document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector("form");
+    const processingContainer = document.getElementById("processingContainer");
+    const progressText = document.getElementById("progressText");
+    const progressBarInner = document.getElementById("progressBarInner");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const analyzedSitesTable = document.querySelector(".table tbody");
+    let analysisRunning = false;
+    let progressInterval;
+
+    // Get the CSRF token from the form
+    const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+
+    form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        if (analysisRunning) return alert("Analysis is already running...");
+
+        const urlInput = document.querySelector('input[name="url"]').value.trim();
+        if (!isValidUrl(urlInput)) {
+            alert("Please enter a valid website or sitemap URL.");
+            return;
+        }
+
+        analysisRunning = true;
+        processingContainer.style.display = "block";
+        progressBarInner.style.width = "0%";
+        progressText.innerText = "Analyzing...";
+        cancelBtn.style.display = "block";
+
+        // Send request to start analysis
+        fetch("/analyze", {
+            method: "POST",
+            body: new URLSearchParams({ url: urlInput, csrf_token: csrfToken }),
+            headers: { 
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                startProgressBar(data.analysis_id);
+            } else {
+                alert(data.message || "Error occurred while analyzing.");
+                resetAnalysisUI();
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            resetAnalysisUI();
+        });
+    });
+
+    function startProgressBar(analysisId) {
+        let progress = 0;
+        progressInterval = setInterval(() => {
+            if (progress >= 100 || !analysisRunning) {
+                clearInterval(progressInterval);
+                if (progress >= 100) {
+                    fetchAnalysisResults(analysisId);
+                }
+                return;
+            }
+            progress += 5;
+            progressBarInner.style.width = `${progress}%`;
+            progressText.innerText = `Analyzing... (${progress}%)`;
+        }, 500);
+    }
+
+    function fetchAnalysisResults(analysisId) {
+        fetch(`/get_analysis_results?id=${analysisId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateAnalyzedSitesTable(data.result);
+                updateRemainingUrls(data.remaining_urls);
+                progressText.innerText = "Completed!";
+
+                // Automatically download the report if available
+                if (data.result.excel_file) {
+                    setTimeout(() => {
+                        window.location.href = `/download/${data.result.id}`;
+                    }, 1000);
+                }
+
+                setTimeout(() => {
+                    processingContainer.style.display = "none";
+                    resetAnalysisUI();
+                }, 1500);
+            } else {
+                alert("Analysis completed but failed to fetch results.");
+                resetAnalysisUI();
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching results:", error);
+            resetAnalysisUI();
+        });
+    }
+
+    function updateRemainingUrls(count) {
+        const remainingUrlsElement = document.querySelector('.plan-info span:nth-child(3)');
+        if (remainingUrlsElement) {
+            remainingUrlsElement.textContent = `Total URLs Remaining: ${count}`;
+        }
+    }
+
+    function updateAnalyzedSitesTable(result) {
+        const newRow = document.createElement("tr");
+
+        const nameCell = document.createElement("td");
+        nameCell.textContent = result.website_name || new URL(result.url).hostname;
+
+        const urlCell = document.createElement("td");
+        urlCell.textContent = result.url;
+
+        const fileCell = document.createElement("td");
+        if (result.excel_file) {
+            const downloadLink = document.createElement("a");
+            downloadLink.href = `/download?id=${result.id}`;
+            downloadLink.className = "btn btn-sm btn-success";
+            downloadLink.textContent = "Download";
+            fileCell.appendChild(downloadLink);
+
+            setTimeout(() => {
+                window.location.href = downloadLink.href;
+            }, 500);
+        } else {
+            fileCell.textContent = "No file available";
+        }
+
+        newRow.appendChild(nameCell);
+        newRow.appendChild(urlCell);
+        newRow.appendChild(fileCell);
+
+        if (analyzedSitesTable.firstChild) {
+            analyzedSitesTable.insertBefore(newRow, analyzedSitesTable.firstChild);
+        } else {
+            analyzedSitesTable.appendChild(newRow);
+        }
+    }
+
+    cancelBtn.addEventListener("click", function () {
+        if (!analysisRunning) return;
+
+        fetch("/cancel_analysis", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken
+            },
+            body: JSON.stringify({})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                clearInterval(progressInterval);
+                alert("Analysis has been canceled.");
+                resetAnalysisUI();
+            } else {
+                alert(data.error || "Failed to cancel analysis.");
+            }
+        })
+        .catch(error => {
+            console.error("Cancel Error:", error);
+            alert("Error canceling analysis. Please try again.");
+        });
+    });
+
+    function resetAnalysisUI() {
+        analysisRunning = false;
+        processingContainer.style.display = "none";
+        progressBarInner.style.width = "0%";
+        progressText.innerText = "";
+        cancelBtn.style.display = "none";
+        clearInterval(progressInterval);
+    }
+
+    function isValidUrl(url) {
+        const pattern = /^(https?:\/\/)?([\w-]+(\.[\w-]+)+)(\/.*)?$/;
+        return pattern.test(url);
+    }
+});
+
+
+    // Plan Expired or Free Trial Over Modal Logic
+    document.addEventListener('DOMContentLoaded', function () {
+            const isPlanExpired = {{ plan_expired | tojson | safe }};
+            const isFreeTrialOver = {{ free_trial_over | tojson | safe }};
+
+            if (isPlanExpired || isFreeTrialOver) {
+                const modalMessage = isFreeTrialOver ?
+                    "Your free trial is over. Please upgrade your account." :
+                    "Your plan has expired. Please upgrade.";
+
+                document.getElementById('planExpiredMessage').innerText = modalMessage;
+                $('#planExpiredModal').modal({
+                    backdrop: 'static',  // Prevent closing by clicking outside
+                    keyboard: false  // Prevent closing by pressing ESC
+                });
+            }
+        });*/
+        
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector("form");
+    const processingContainer = document.getElementById("processingContainer");
+    const progressText = document.getElementById("progressText");
+    const progressBarInner = document.getElementById("progressBarInner");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const analyzedSitesTable = document.querySelector(".table tbody");
+    let analysisRunning = false;
+    let progressInterval;
+
+    // Get the CSRF token from the form
+    const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+
+    form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        if (analysisRunning) return alert("Analysis is already running...");
+
+        const urlInput = document.querySelector('input[name="url"]').value.trim();
+        if (!isValidUrl(urlInput)) {
+            alert("Please enter a valid website or sitemap URL.");
+            return;
+        }
+
+        analysisRunning = true;
+        processingContainer.style.display = "block";
+        progressBarInner.style.width = "0%";
+        progressText.innerText = "Analyzing...";
+        cancelBtn.style.display = "block";
+
+        // Send request to start analysis
+        fetch("/analyze", {
+            method: "POST",
+            body: new URLSearchParams({ url: urlInput, csrf_token: csrfToken }),
+            headers: { 
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                startProgressBar(data.analysis_id);
+            } else {
+                alert(data.message || "Error occurred while analyzing.");
+                resetAnalysisUI();
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            resetAnalysisUI();
+        });
+    });
+
+    function startProgressBar(analysisId) {
+        let progress = 0;
+        progressInterval = setInterval(() => {
+            if (progress >= 100 || !analysisRunning) {
+                clearInterval(progressInterval);
+                if (progress >= 100) {
+                    fetchAnalysisResults(analysisId);
+                }
+                return;
+            }
+            progress += 5;
+            progressBarInner.style.width = `${progress}%`;
+            progressText.innerText = `Analyzing... (${progress}%)`;
+        }, 500);
+    }
+
+    function fetchAnalysisResults(analysisId) {
+        fetch(`/get_analysis_results?id=${analysisId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateAnalyzedSitesTable(data.result);
+                updateRemainingUrls(data.remaining_urls);
+                progressText.innerText = "Completed!";
+
+                // Remove the automatic download code
+                // Just show completion message and hide processing container
+                setTimeout(() => {
+                    processingContainer.style.display = "none";
+                    resetAnalysisUI();
+                    window.location.reload(); // Refresh to show new results
+                }, 1500);
+            } else {
+                alert("Analysis completed but failed to fetch results.");
+                resetAnalysisUI();
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching results:", error);
+            resetAnalysisUI();
+        });
+    }
+
+    function updateRemainingUrls(count) {
+        const remainingUrlsElement = document.querySelector('.plan-info span:nth-child(3)');
+        if (remainingUrlsElement) {
+            remainingUrlsElement.textContent = `Total URLs Remaining: ${count}`;
+        }
+    }
+
+    function updateAnalyzedSitesTable(result) {
+        const newRow = document.createElement("tr");
+
+        const nameCell = document.createElement("td");
+        nameCell.textContent = result.website_name || new URL(result.url).hostname;
+
+        const urlCell = document.createElement("td");
+        urlCell.textContent = result.url;
+
+        const fileCell = document.createElement("td");
+        if (result.excel_file) {
+            const downloadLink = document.createElement("a");
+            downloadLink.href = `/download/${result.id}`;
+            downloadLink.className = "btn btn-sm btn-success";
+            downloadLink.textContent = "Download";
+            fileCell.appendChild(downloadLink);
+        } else {
+            fileCell.textContent = "No file available";
+        }
+
+        newRow.appendChild(nameCell);
+        newRow.appendChild(urlCell);
+        newRow.appendChild(fileCell);
+
+        if (analyzedSitesTable.firstChild) {
+            analyzedSitesTable.insertBefore(newRow, analyzedSitesTable.firstChild);
+        } else {
+            analyzedSitesTable.appendChild(newRow);
+        }
+    }
+
+    cancelBtn.addEventListener("click", function () {
+        if (!analysisRunning) return;
+
+        fetch("/cancel_analysis", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken
+            },
+            body: JSON.stringify({})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                clearInterval(progressInterval);
+                alert("Analysis has been canceled.");
+                resetAnalysisUI();
+            } else {
+                alert(data.error || "Failed to cancel analysis.");
+            }
+        })
+        .catch(error => {
+            console.error("Cancel Error:", error);
+            alert("Error canceling analysis. Please try again.");
+        });
+    });
+
+    function resetAnalysisUI() {
+        analysisRunning = false;
+        processingContainer.style.display = "none";
+        progressBarInner.style.width = "0%";
+        progressText.innerText = "";
+        cancelBtn.style.display = "none";
+        clearInterval(progressInterval);
+    }
+
+    function isValidUrl(url) {
+        const pattern = /^(https?:\/\/)?([\w-]+(\.[\w-]+)+)(\/.*)?$/;
+        return pattern.test(url);
+    }
+});
+
+// Plan Expired or Free Trial Over Modal Logic
+document.addEventListener('DOMContentLoaded', function () {
+    const isPlanExpired = {{ plan_expired | tojson | safe }};
+    const isFreeTrialOver = {{ free_trial_over | tojson | safe }};
+
+    if (isPlanExpired || isFreeTrialOver) {
+        const modalMessage = isFreeTrialOver ?
+            "Your free trial is over. Please upgrade your account." :
+            "Your plan has expired. Please upgrade.";
+
+        document.getElementById('planExpiredMessage').innerText = modalMessage;
+        $('#planExpiredModal').modal({
+            backdrop: 'static',  // Prevent closing by clicking outside
+            keyboard: false  // Prevent closing by pressing ESC
+        });
+    }
+});
+
+    </script>  
+    </section>
+{% endblock %}

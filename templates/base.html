@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Magnustic</title>
+  <meta content="" name="description">
+  <meta content="" name="keywords">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/style.css') }}">
+  
+</head>
+<body>
+  <header style="background-color: #44bbbf;">
+    <nav class="navbar navbar-expand-lg navbar-light">
+      <a class="navbar-brand" href="{{ url_for('dashboard', username=current_user.username) }}">        
+        <img src="{{ url_for('static', filename='assets/images/magnustic300x76.png') }}" alt="Logo" width="300" height="76" class="img-fluid navbar-logo">
+      </a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+          <!--<li class="nav-item">
+            <a class="nav-link" href="">Home</a>
+          </li>-->
+          {% if current_user.is_authenticated  %}
+  <li class="nav-item">
+    <a class="btn btn-danger" href="{{ url_for('logout') }}" style="margin-top: 17px;">Logout</a>
+  </li>
+{% else %}
+<!-- In your base.html or wherever the logout button is -->
+<!--{% if current_user.is_authenticated %}
+<li class="nav-item">
+  <a class="btn btn-danger" href="{{ url_for('logout') }}" style="margin-top: 17px;">Logout</a>
+</li>
+{% endif %}-->
+  <li>
+    <a class="btn btn-login" href="{{ url_for('login') }}">Login</a>
+  </li>
+  <li>
+    <a class="btn btn-register" href="{{ url_for('register') }}">Register</a>
+  </li>
+{% endif %}
+
+        </ul>
+      </div>
+    </nav>
+  </header>
+  
+
+  {% block body %}  {% endblock %}
+
+  <!--Start footer-->
+  <footer id="footer">
+    <!--<div class="footer-top">
+      <div class="container">
+        <div class="row">
+
+          <div class="col-lg-3 col-md-6 footer-contact">
+            <!--<h3>Gaining Great</h3>--
+            <img src="{{ url_for('static', filename='assets/images/logo.png') }}" alt="">
+            <hr>
+              <strong>Phone:</strong> +1 5589 55488 55<br>
+              <strong>Email:</strong> info@example.com<br>
+            </p>
+          </div>
+
+          <div class="col-lg-2 col-md-4 footer-links">
+            <h4>Useful Links</h4>
+            <ul>
+              <li><i class="bx bx-chevron-right"></i> <a href="#">Home</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#">About us</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#">Terms of service</a></li>
+              <li><i class="bx bx-chevron-right"></i> <a href="#">Privacy policy</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-3 col-md-6 footer-links">
+            <h4>Projects</h4>
+            <ul>
+              <li><a href="/translate">Translate</a></li>
+                <li><a href="/web-scraping">Web scrapping</a></li>
+                <li><a href="/word-counter">Word counter</a></li>
+              <!-- Add more categories as needed --
+            </ul>
+          </div>
+
+          <div class="col-lg-4 col-md-6 footer-newsletter">
+            <h4>Join Us if you have great knowledge</h4>
+            <p></p>
+            
+          </div>
+
+        </div>
+      </div>
+    </div>-->
+
+    <div class="container d-md-flex py-4">
+
+      <div class="me-md-auto text-center text-md-start">
+        <div class="copyright" style="position: relative;">
+          &copy; Copyright <strong><span>Magnustic</span></strong>. All Rights Reserved
+        </div>
+        
+      </div>
+    
+    </div>
+  </footer><!-- End Footer -->
+</body>
+</html>

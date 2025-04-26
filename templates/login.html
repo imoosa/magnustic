@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block body %}
+  
+<section class="login">
+  <div class="flex-container">
+    <div class="login-container">
+      <img src="{{ url_for('static', filename='assets/images/logo.png') }}" alt="Gainingreat Logo" class="logo">
+      <h2>Login</h2>
+      <!-- Flash messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="flash-message {{ category }}">
+              {{ message }}
+              {% if category == 'warning' %}
+                <a href="{{ url_for('register') }}" class="register-prompt">Register over here</a>
+              {% endif %}
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+      <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="login-form-group">
+          {{ form.email.label }}<br>
+          {{ form.email(size=32, class="form-control") }}
+          {% if form.email.errors %}
+              <span class="error-message">{{ form.email.errors[0] }}</span>
+          {% endif %}
+      </div>
+        <div class="login-form-group">
+          {{ form.password.label }}<br>
+          {{ form.password(size=32, class="form-control") }}
+          {% if form.password.errors %}
+            <span class="error-message">{{ form.password.errors[0] }}</span>
+          {% endif %}
+        </div>
+        <div class="login-form-group">
+          <a href="{{ url_for('forgot_password') }}" class="register-link">Forgot Password?</a>
+        </div>
+        
+        <div >
+          {{ form.submit(class="login-submit-button") }}
+        </div>
+      </form>
+      <a href="{{ url_for('register') }}" class="register-link">Don't have an account? Register</a>
+    </div>
+  </div>
+</section>
+{% endblock %}
