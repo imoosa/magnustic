@@ -1758,4 +1758,4 @@ def analyze():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=1365)
+    app.run(debug=False, host='0.0.0.0')
