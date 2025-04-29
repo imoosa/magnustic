@@ -1427,7 +1427,7 @@ def cancel_analysis():
 @app.route("/", methods=["GET", "POST"])
 def analyze_single_url():
     form = AnalysisForm()
-    
+    metrics_data = {}
     if form.validate_on_submit():  # This checks CSRF automatically
         try:
             url = form.url.data.strip()
