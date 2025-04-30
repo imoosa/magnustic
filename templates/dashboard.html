@@ -201,385 +201,143 @@
     
 
     <script>
-   
-   /*document.addEventListener("DOMContentLoaded", function () {
-    const form = document.querySelector("form");
-    const processingContainer = document.getElementById("processingContainer");
-    const progressText = document.getElementById("progressText");
-    const progressBarInner = document.getElementById("progressBarInner");
-    const cancelBtn = document.getElementById("cancelBtn");
-    const analyzedSitesTable = document.querySelector(".table tbody");
-    let analysisRunning = false;
-    let progressInterval;
-
-    // Get the CSRF token from the form
-    const csrfToken = document.querySelector('input[name="csrf_token"]').value;
-
-    form.addEventListener("submit", function (event) {
-        event.preventDefault();
-        if (analysisRunning) return alert("Analysis is already running...");
-
-        const urlInput = document.querySelector('input[name="url"]').value.trim();
-        if (!isValidUrl(urlInput)) {
-            alert("Please enter a valid website or sitemap URL.");
-            return;
-        }
-
-        analysisRunning = true;
-        processingContainer.style.display = "block";
-        progressBarInner.style.width = "0%";
-        progressText.innerText = "Analyzing...";
-        cancelBtn.style.display = "block";
-
-        // Send request to start analysis
-        fetch("/analyze", {
-            method: "POST",
-            body: new URLSearchParams({ url: urlInput, csrf_token: csrfToken }),
-            headers: { 
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                startProgressBar(data.analysis_id);
-            } else {
-                alert(data.message || "Error occurred while analyzing.");
-                resetAnalysisUI();
-            }
-        })
-        .catch(error => {
-            console.error("Error:", error);
-            resetAnalysisUI();
-        });
-    });
-
-    function startProgressBar(analysisId) {
-        let progress = 0;
-        progressInterval = setInterval(() => {
-            if (progress >= 100 || !analysisRunning) {
-                clearInterval(progressInterval);
-                if (progress >= 100) {
-                    fetchAnalysisResults(analysisId);
-                }
-                return;
-            }
-            progress += 5;
-            progressBarInner.style.width = `${progress}%`;
-            progressText.innerText = `Analyzing... (${progress}%)`;
-        }, 500);
-    }
-
-    function fetchAnalysisResults(analysisId) {
-        fetch(`/get_analysis_results?id=${analysisId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                updateAnalyzedSitesTable(data.result);
-                updateRemainingUrls(data.remaining_urls);
-                progressText.innerText = "Completed!";
-
-                // Automatically download the report if available
-                if (data.result.excel_file) {
-                    setTimeout(() => {
-                        window.location.href = `/download/${data.result.id}`;
-                    }, 1000);
-                }
-
-                setTimeout(() => {
-                    processingContainer.style.display = "none";
-                    resetAnalysisUI();
-                }, 1500);
-            } else {
-                alert("Analysis completed but failed to fetch results.");
-                resetAnalysisUI();
-            }
-        })
-        .catch(error => {
-            console.error("Error fetching results:", error);
-            resetAnalysisUI();
-        });
-    }
-
-    function updateRemainingUrls(count) {
-        const remainingUrlsElement = document.querySelector('.plan-info span:nth-child(3)');
-        if (remainingUrlsElement) {
-            remainingUrlsElement.textContent = `Total URLs Remaining: ${count}`;
-        }
-    }
-
-    function updateAnalyzedSitesTable(result) {
-        const newRow = document.createElement("tr");
-
-        const nameCell = document.createElement("td");
-        nameCell.textContent = result.website_name || new URL(result.url).hostname;
-
-        const urlCell = document.createElement("td");
-        urlCell.textContent = result.url;
-
-        const fileCell = document.createElement("td");
-        if (result.excel_file) {
-            const downloadLink = document.createElement("a");
-            downloadLink.href = `/download?id=${result.id}`;
-            downloadLink.className = "btn btn-sm btn-success";
-            downloadLink.textContent = "Download";
-            fileCell.appendChild(downloadLink);
-
-            setTimeout(() => {
-                window.location.href = downloadLink.href;
-            }, 500);
-        } else {
-            fileCell.textContent = "No file available";
-        }
-
-        newRow.appendChild(nameCell);
-        newRow.appendChild(urlCell);
-        newRow.appendChild(fileCell);
-
-        if (analyzedSitesTable.firstChild) {
-            analyzedSitesTable.insertBefore(newRow, analyzedSitesTable.firstChild);
-        } else {
-            analyzedSitesTable.appendChild(newRow);
-        }
-    }
-
-    cancelBtn.addEventListener("click", function () {
-        if (!analysisRunning) return;
-
-        fetch("/cancel_analysis", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": csrfToken
-            },
-            body: JSON.stringify({})
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                clearInterval(progressInterval);
-                alert("Analysis has been canceled.");
-                resetAnalysisUI();
-            } else {
-                alert(data.error || "Failed to cancel analysis.");
-            }
-        })
-        .catch(error => {
-            console.error("Cancel Error:", error);
-            alert("Error canceling analysis. Please try again.");
-        });
-    });
-
-    function resetAnalysisUI() {
-        analysisRunning = false;
-        processingContainer.style.display = "none";
-        progressBarInner.style.width = "0%";
-        progressText.innerText = "";
-        cancelBtn.style.display = "none";
-        clearInterval(progressInterval);
-    }
-
-    function isValidUrl(url) {
-        const pattern = /^(https?:\/\/)?([\w-]+(\.[\w-]+)+)(\/.*)?$/;
-        return pattern.test(url);
-    }
-});
-
-
-    // Plan Expired or Free Trial Over Modal Logic
-    document.addEventListener('DOMContentLoaded', function () {
-            const isPlanExpired = {{ plan_expired | tojson | safe }};
-            const isFreeTrialOver = {{ free_trial_over | tojson | safe }};
-
-            if (isPlanExpired || isFreeTrialOver) {
-                const modalMessage = isFreeTrialOver ?
-                    "Your free trial is over. Please upgrade your account." :
-                    "Your plan has expired. Please upgrade.";
-
-                document.getElementById('planExpiredMessage').innerText = modalMessage;
-                $('#planExpiredModal').modal({
-                    backdrop: 'static',  // Prevent closing by clicking outside
-                    keyboard: false  // Prevent closing by pressing ESC
-                });
-            }
-        });*/
         
+       
 document.addEventListener("DOMContentLoaded", function () {
     const form = document.querySelector("form");
     const processingContainer = document.getElementById("processingContainer");
     const progressText = document.getElementById("progressText");
     const progressBarInner = document.getElementById("progressBarInner");
     const cancelBtn = document.getElementById("cancelBtn");
-    const analyzedSitesTable = document.querySelector(".table tbody");
-    let analysisRunning = false;
-    let progressInterval;
-
-    // Get the CSRF token from the form
-    const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+    let taskCheckInterval;
+    let currentTaskId = null;
 
     form.addEventListener("submit", function (event) {
         event.preventDefault();
-        if (analysisRunning) return alert("Analysis is already running...");
-
+        
         const urlInput = document.querySelector('input[name="url"]').value.trim();
         if (!isValidUrl(urlInput)) {
-            alert("Please enter a valid website or sitemap URL.");
+            alert("Please enter a valid website URL");
             return;
         }
 
-        analysisRunning = true;
+        // Show processing UI
         processingContainer.style.display = "block";
         progressBarInner.style.width = "0%";
-        progressText.innerText = "Analyzing...";
+        progressText.innerText = "Starting analysis...";
         cancelBtn.style.display = "block";
 
-        // Send request to start analysis
+        // Submit to Flask endpoint
         fetch("/analyze", {
             method: "POST",
-            body: new URLSearchParams({ url: urlInput, csrf_token: csrfToken }),
-            headers: { 
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
+            body: new FormData(form),
+            headers: {
+                "X-CSRFToken": document.querySelector('meta[name="csrf-token"]').content
+            }
         })
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                startProgressBar(data.analysis_id);
+            if (data.success && data.task_id) {
+                currentTaskId = data.task_id;
+                monitorTaskProgress(data.status_url);
             } else {
-                alert(data.message || "Error occurred while analyzing.");
-                resetAnalysisUI();
+                throw new Error(data.message || "Analysis failed to start");
             }
         })
         .catch(error => {
             console.error("Error:", error);
-            resetAnalysisUI();
+            showError(error.message);
+            resetUI();
         });
     });
 
-    function startProgressBar(analysisId) {
-        let progress = 0;
-        progressInterval = setInterval(() => {
-            if (progress >= 100 || !analysisRunning) {
-                clearInterval(progressInterval);
-                if (progress >= 100) {
-                    fetchAnalysisResults(analysisId);
-                }
-                return;
-            }
-            progress += 5;
-            progressBarInner.style.width = `${progress}%`;
-            progressText.innerText = `Analyzing... (${progress}%)`;
-        }, 500);
+    function monitorTaskProgress(statusUrl) {
+        // Clear any existing interval
+        if (taskCheckInterval) clearInterval(taskCheckInterval);
+        
+        // Start checking task status
+        taskCheckInterval = setInterval(() => {
+            fetch(statusUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.state === 'PROGRESS') {
+                        updateProgress(data.progress, data.status);
+                    } else if (data.state === 'SUCCESS') {
+                        completeAnalysis(data.result);
+                        clearInterval(taskCheckInterval);
+                    } else if (data.state === 'FAILURE') {
+                        throw new Error(data.status || "Analysis failed");
+                    }
+                    // Else (PENDING): do nothing, keep waiting
+                })
+                .catch(error => {
+                    clearInterval(taskCheckInterval);
+                    showError(error.message);
+                    resetUI();
+                });
+        }, 1000); // Check every second
     }
 
-    function fetchAnalysisResults(analysisId) {
-        fetch(`/get_analysis_results?id=${analysisId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                updateAnalyzedSitesTable(data.result);
-                updateRemainingUrls(data.remaining_urls);
-                progressText.innerText = "Completed!";
-
-                // Remove the automatic download code
-                // Just show completion message and hide processing container
-                setTimeout(() => {
-                    processingContainer.style.display = "none";
-                    resetAnalysisUI();
-                    window.location.reload(); // Refresh to show new results
-                }, 1500);
-            } else {
-                alert("Analysis completed but failed to fetch results.");
-                resetAnalysisUI();
-            }
-        })
-        .catch(error => {
-            console.error("Error fetching results:", error);
-            resetAnalysisUI();
-        });
+    function updateProgress(percent, message) {
+        progressBarInner.style.width = `${percent}%`;
+        progressText.innerText = message || `Analyzing... ${percent}%`;
     }
 
-    function updateRemainingUrls(count) {
-        const remainingUrlsElement = document.querySelector('.plan-info span:nth-child(3)');
-        if (remainingUrlsElement) {
-            remainingUrlsElement.textContent = `Total URLs Remaining: ${count}`;
-        }
+    function completeAnalysis(result) {
+        progressBarInner.style.width = "100%";
+        progressText.innerText = "Analysis complete!";
+        
+        // Refresh the page after 2 seconds to show new results
+        setTimeout(() => {
+            window.location.reload();
+        }, 2000);
     }
 
-    function updateAnalyzedSitesTable(result) {
-        const newRow = document.createElement("tr");
-
-        const nameCell = document.createElement("td");
-        nameCell.textContent = result.website_name || new URL(result.url).hostname;
-
-        const urlCell = document.createElement("td");
-        urlCell.textContent = result.url;
-
-        const fileCell = document.createElement("td");
-        if (result.excel_file) {
-            const downloadLink = document.createElement("a");
-            downloadLink.href = `/download/${result.id}`;
-            downloadLink.className = "btn btn-sm btn-success";
-            downloadLink.textContent = "Download";
-            fileCell.appendChild(downloadLink);
-        } else {
-            fileCell.textContent = "No file available";
-        }
-
-        newRow.appendChild(nameCell);
-        newRow.appendChild(urlCell);
-        newRow.appendChild(fileCell);
-
-        if (analyzedSitesTable.firstChild) {
-            analyzedSitesTable.insertBefore(newRow, analyzedSitesTable.firstChild);
-        } else {
-            analyzedSitesTable.appendChild(newRow);
-        }
+    function showError(message) {
+        alert("Error: " + message);
     }
 
-    cancelBtn.addEventListener("click", function () {
-        if (!analysisRunning) return;
-
-        fetch("/cancel_analysis", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": csrfToken
-            },
-            body: JSON.stringify({})
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                clearInterval(progressInterval);
-                alert("Analysis has been canceled.");
-                resetAnalysisUI();
-            } else {
-                alert(data.error || "Failed to cancel analysis.");
-            }
-        })
-        .catch(error => {
-            console.error("Cancel Error:", error);
-            alert("Error canceling analysis. Please try again.");
-        });
-    });
-
-    function resetAnalysisUI() {
-        analysisRunning = false;
+    function resetUI() {
         processingContainer.style.display = "none";
         progressBarInner.style.width = "0%";
-        progressText.innerText = "";
         cancelBtn.style.display = "none";
-        clearInterval(progressInterval);
+        currentTaskId = null;
     }
 
+    cancelBtn.addEventListener("click", function() {
+        if (currentTaskId) {
+            fetch("/cancel_analysis", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({ task_id: currentTaskId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Analysis cancelled");
+                } else {
+                    alert("Failed to cancel: " + (data.error || "Unknown error"));
+                }
+                resetUI();
+                if (taskCheckInterval) clearInterval(taskCheckInterval);
+            });
+        }
+    });
+
     function isValidUrl(url) {
-        const pattern = /^(https?:\/\/)?([\w-]+(\.[\w-]+)+)(\/.*)?$/;
-        return pattern.test(url);
+        try {
+            new URL(url);
+            return true;
+        } catch {
+            return false;
+        }
     }
 });
 
-// Plan Expired or Free Trial Over Modal Logic
+// Keep your existing plan expired modal logic
 document.addEventListener('DOMContentLoaded', function () {
     const isPlanExpired = {{ plan_expired | tojson | safe }};
     const isFreeTrialOver = {{ free_trial_over | tojson | safe }};
@@ -591,11 +349,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
         document.getElementById('planExpiredMessage').innerText = modalMessage;
         $('#planExpiredModal').modal({
-            backdrop: 'static',  // Prevent closing by clicking outside
-            keyboard: false  // Prevent closing by pressing ESC
+            backdrop: 'static',
+            keyboard: false
         });
     }
 });
+
 
     </script>  
     </section>
