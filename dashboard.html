@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+{% block body %}
+   <section class="dashboard">
+    <div class="dashboard-container">
+        <!-- Header Section -->
+        <div class="header-section">
+            <h1>Dashboard</h1>
+            <div>
+                <span class="mr-3">Welcome, {{ current_user.name }}</span>
+            </div>
+        </div>
+
+        <!-- Plan Information -->
+        <div class="plan-info">
+            <span><strong>Your Plan:</strong> {{ plan.name if plan else "No Plan Selected" }}</span>
+            <span class="separator">|</span>
+            <span><strong>Total URLs Remaining:</strong> {{ urls_remaining }}</span>
+            {% if remaining_days is not none %}
+                <span class="separator">|</span>
+                <span><strong>Remaining Days:</strong> {{ remaining_days }} days</span>
+            {% endif %}
+            <a href="{{ url_for('select_plan') }}" class="btn btn-warning btn-sm">Upgrade Plan</a>
+        </div>
+
+        <!-- URL Input Form -->
+        <form method="POST" action="{{ url_for('analyze') }}" class="mb-4">
+            {{ form.hidden_tag() }} 
+            <div class="dashboard-form-group">
+                <label for="url">Enter URL to Analyze:</label>
+                {{ form.url(class="form-control", placeholder="Enter a website URL") }}
+            </div>
+            <button type="submit" class="btn btn-primary">Analyze</button>
+        </form>
+
+        <!-- Processing Container -->
+        <div class="processing-container" id="processingContainer" style="display: none;">
+            <div class="processing-header">
+                <p id="progressText">Analyzing...</p>
+                <button id="cancelBtn" class="btn btn-danger btn-sm" onclick="cancelAnalysis()">Cancel</button>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress">
+                    <div id="progressBarInner" class="progress-bar" style="width: 0%;"></div>
+                    <div id="slantLines" class="slant-lines"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Display Analysis Results -->
+        {% if latest_analysis and latest_analysis.metrics %}
+            <div class="metrics-section">
+                <!-- Grade Card -->
+                <div class="metric-card">
+                    <h3>Website Grade</h3>
+                    <div class="grade-display grade-{{ latest_analysis.grade|lower }}">
+                        {{ latest_analysis.grade }}
+                    </div>
+                    <div class="grade-description">
+                        {% if latest_analysis.grade == 'A' %}
+                            Excellent SEO performance
+                        {% elif latest_analysis.grade == 'B' %}
+                            Good SEO performance
+                        {% elif latest_analysis.grade == 'C' %}
+                            Average SEO performance
+                        {% elif latest_analysis.grade == 'D' %}
+                            Below average SEO performance
+                        {% else %}
+                            Poor SEO performance
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Moz Metrics -->
+                <div class="metric-card">
+                    <h3>Moz Metrics</h3>
+                    <div class="metrics-grid">
+                        {% if latest_analysis.moz_metrics %}
+                            <div class="metric-item">
+                                <span class="metric-label">Domain Authority</span>
+                                <span class="metric-value">{{ latest_analysis.moz_metrics.get('Domain Authority', 'N/A') }}</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Page Authority</span>
+                                <span class="metric-value">{{ latest_analysis.moz_metrics.get('Page Authority', 'N/A') }}</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Spam Score</span>
+                                <span class="metric-value">{{ latest_analysis.moz_metrics.get('Spam Score', 'N/A') }}</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Backlink Domains</span>
+                                <span class="metric-value">{{ latest_analysis.moz_metrics.get('Backlink Domain', 'N/A') }}</span>
+                            </div>
+                        {% else %}
+                            <div class="no-data">No Moz metrics available</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Page Speed Metrics -->
+                <div class="metric-card">
+                    <h3>Page Speed Metrics</h3>
+                    <div class="metrics-grid">
+                        <div class="metric-item">
+                            <span class="metric-label">Performance Score</span>
+                            <span class="metric-value">{{ "%.1f"|format(latest_analysis.metrics['Performance Score (Desktop)'][0]) }}</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">First Contentful Paint</span>
+                            <span class="metric-value">{{ latest_analysis.metrics['First Contentful Paint (Desktop)'][0] }}</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Speed Index</span>
+                            <span class="metric-value">{{ latest_analysis.metrics['Speed Index (Desktop)'][0] }}</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Time to Interactive</span>
+                            <span class="metric-value">{{ latest_analysis.metrics['Time to Interactive (Desktop)'][0] }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEO Metrics Table -->
+            <div class="seo-metrics-section">
+                <h3>SEO Metrics</h3>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-compact">
+                        <thead>
+                            <tr>
+                                <th>URL</th>
+                                <th>Meta Title</th>
+                                <th>Meta Description</th>
+                                <th>Image Size</th>
+                                <th>Structured Data</th>
+                                <th>Internal Links</th>
+                                <th>External Links</th>
+                                <th>H1 Tags</th>
+                                <th>H2 Tags</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for i in range(5) if latest_analysis.metrics['URL']|length > i %}
+                                <tr>
+                                    <td class="url-cell">{{ latest_analysis.metrics['URL'][i]|truncate(30) }}</td>
+                                    <td>{{ latest_analysis.metrics['Meta Title'][i]|truncate(50) }}</td>
+                                    <td>{{ latest_analysis.metrics['Meta Description'][i]|truncate(70) }}</td>
+                                    <td>{{ latest_analysis.metrics['Largest Image Size (KB)'][i] }}</td>
+                                    <td>{{ latest_analysis.metrics['Structured Data'][i] }}</td>
+                                    <td>{{ latest_analysis.metrics['Internal Links'][i] }}</td>
+                                    <td>{{ latest_analysis.metrics['External Links'][i] }}</td>
+                                    <td>{{ latest_analysis.metrics['H1 Tags'][i]|truncate(30) }}</td>
+                                    <td>{{ latest_analysis.metrics['H2 Tags'][i]|truncate(30) }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if latest_analysis.excel_file %}
+                    <div class="download-button">
+                        <a href="{{ url_for('download', analysis_id=latest_analysis.id) }}" class="btn btn-success">Download Complete Report</a>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <!-- Analyzed Sites Table -->
+        <h3>Analyzed Sites</h3>
+        <div class="table-responsive">
+            <table class="table table-bordered table-compact">
+                <thead>
+                    <tr>
+                        <th>S.No.</th>
+                        <th>Website Name</th>
+                        <th>URL</th>
+                        <th>Date Analyzed</th>
+                        <th>Excel File</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for site in analyzed_sites %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ site.website_name }}</td>
+                            <td class="url-cell">{{ site.url|truncate(30) }}</td>
+                            <td>{{ site.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                {% if site.excel_file %}
+                                    <a href="{{ url_for('download', analysis_id=site.id) }}" class="btn btn-sm btn-success">Download</a>
+                                {% else %}
+                                    No file available
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    
+
+    <script>
+        
+       
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector("form");
+    const processingContainer = document.getElementById("processingContainer");
+    const progressText = document.getElementById("progressText");
+    const progressBarInner = document.getElementById("progressBarInner");
+    const cancelBtn = document.getElementById("cancelBtn");
+    let taskCheckInterval;
+    let currentTaskId = null;
+
+    form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        
+        const urlInput = document.querySelector('input[name="url"]').value.trim();
+        if (!isValidUrl(urlInput)) {
+            alert("Please enter a valid website URL");
+            return;
+        }
+
+        // Show processing UI
+        processingContainer.style.display = "block";
+        progressBarInner.style.width = "0%";
+        progressText.innerText = "Starting analysis...";
+        cancelBtn.style.display = "block";
+
+        // Submit to Flask endpoint
+        fetch("/analyze", {
+            method: "POST",
+            body: new FormData(form),
+            headers: {
+                "X-CSRFToken": document.querySelector('meta[name="csrf-token"]').content
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.task_id) {
+                currentTaskId = data.task_id;
+                monitorTaskProgress(data.status_url);
+            } else {
+                throw new Error(data.message || "Analysis failed to start");
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            showError(error.message);
+            resetUI();
+        });
+    });
+
+    function monitorTaskProgress(statusUrl) {
+        // Clear any existing interval
+        if (taskCheckInterval) clearInterval(taskCheckInterval);
+        
+        // Start checking task status
+        taskCheckInterval = setInterval(() => {
+            fetch(statusUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.state === 'PROGRESS') {
+                        updateProgress(data.progress, data.status);
+                    } else if (data.state === 'SUCCESS') {
+                        completeAnalysis(data.result);
+                        clearInterval(taskCheckInterval);
+                    } else if (data.state === 'FAILURE') {
+                        throw new Error(data.status || "Analysis failed");
+                    }
+                    // Else (PENDING): do nothing, keep waiting
+                })
+                .catch(error => {
+                    clearInterval(taskCheckInterval);
+                    showError(error.message);
+                    resetUI();
+                });
+        }, 1000); // Check every second
+    }
+
+    function updateProgress(percent, message) {
+        progressBarInner.style.width = `${percent}%`;
+        progressText.innerText = message || `Analyzing... ${percent}%`;
+    }
+
+    function completeAnalysis(result) {
+        progressBarInner.style.width = "100%";
+        progressText.innerText = "Analysis complete!";
+        
+        // Refresh the page after 2 seconds to show new results
+        setTimeout(() => {
+            window.location.reload();
+        }, 2000);
+    }
+
+    function showError(message) {
+        alert("Error: " + message);
+    }
+
+    function resetUI() {
+        processingContainer.style.display = "none";
+        progressBarInner.style.width = "0%";
+        cancelBtn.style.display = "none";
+        currentTaskId = null;
+    }
+
+    cancelBtn.addEventListener("click", function() {
+        if (currentTaskId) {
+            fetch("/cancel_analysis", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({ task_id: currentTaskId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Analysis cancelled");
+                } else {
+                    alert("Failed to cancel: " + (data.error || "Unknown error"));
+                }
+                resetUI();
+                if (taskCheckInterval) clearInterval(taskCheckInterval);
+            });
+        }
+    });
+
+    function isValidUrl(url) {
+        try {
+            new URL(url);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+});
+
+// Keep your existing plan expired modal logic
+document.addEventListener('DOMContentLoaded', function () {
+    const isPlanExpired = {{ plan_expired | tojson | safe }};
+    const isFreeTrialOver = {{ free_trial_over | tojson | safe }};
+
+    if (isPlanExpired || isFreeTrialOver) {
+        const modalMessage = isFreeTrialOver ?
+            "Your free trial is over. Please upgrade your account." :
+            "Your plan has expired. Please upgrade.";
+
+        document.getElementById('planExpiredMessage').innerText = modalMessage;
+        $('#planExpiredModal').modal({
+            backdrop: 'static',
+            keyboard: false
+        });
+    }
+});
+
+
+    </script>  
+    </section>
+{% endblock %}
