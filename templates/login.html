@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block body %}
+  
+
+<div class="split-login-wrapper">
+  <!-- Left Panel (Login Form) -->
+  <div class="login-form-panel">
+    <div class="moz-login-container">
+      <img src="{{ url_for('static', filename='assets/images/magnustic300x76.png') }}" alt="Logo" class="login-logo-img">
+      
+      <h1 class="moz-welcome">Welcome! Log in here.</h1>
+      
+      <div class="moz-signup-prompt">
+        Haven't signed up? <a href="{{ url_for('register') }}">Create an account</a>
+      </div>
+      
+      <!-- Flash messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+              {{ message | safe }}
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+      
+      <form method="POST" class="moz-login-form">
+        {{ form.hidden_tag() }}
+        
+        <div class="moz-form-group">
+          <label>Email</label>
+          {{ form.email(size=32, class="moz-input", placeholder="Enter email*") }}
+          {% if form.email.errors %}
+            <span class="moz-error">{{ form.email.errors[0] }}</span>
+          {% endif %}
+        </div>
+        
+        <div class="moz-form-group">
+          <label>Password</label>
+          {{ form.password(size=32, class="moz-input", placeholder="Enter password*") }}
+          {% if form.password.errors %}
+            <span class="moz-error">{{ form.password.errors[0] }}</span>
+          {% endif %}
+        </div>
+        
+        <div class="moz-options">
+          <div class="moz-remember">
+            <input type="checkbox" id="remember">
+            <label for="remember">Remember me</label>
+          </div>
+          <a href="{{ url_for('forgot_password') }}" class="moz-reset">Reset Password</a>
+        </div>
+        
+        {{ form.submit(class="moz-submit", value="Login") }}
+      </form>
+    </div>
+  </div>
+
+  <!-- Right Panel (Tech Visual) -->
+  <div class="tech-visual-panel">
+    <div class="grid-scan-animation">
+      <div class="scan-beam"></div>
+    </div>
+    
+    <div class="visual-content">
+      <div class="data-point" style="--x: 20%; --y: 3%;">
+        <div class="data-bubble">+37% Traffic</div>
+      </div>
+       <div class="data-point" style="--x: 70%; --y: 50%;">
+        <div class="data-bubble">92% Score</div>
+      </div>
+       <div class="data-point" style="--x: 40%; --y: 95%;">
+        <div class="data-bubble">24 Keywords</div>
+      </div>
+      
+      <div class="feature-card">
+        <h3>MagnusTic SEO Suite</h3>
+        <ul>
+          <li>
+            <span class="feature-icon">⚡</span>
+            <span class="feature-text">Real-time ranking analysis</span>
+          </li>
+          <li>
+            <span class="feature-icon">📊</span>
+            <span class="feature-text">Competitor intelligence</span>
+          </li>
+          <li>
+            <span class="feature-icon">🤖</span>
+            <span class="feature-text">AI-powered recommendations</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{% endblock %}

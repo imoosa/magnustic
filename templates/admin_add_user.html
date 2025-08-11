@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>Add New User</h2>
+  <form method="POST">
+    {{ form.hidden_tag() }}
+    <div class="form-group">
+      {{ form.username.label }}<br>
+      {{ form.username(size=32, class="form-control") }}<br>
+      {% if form.username.errors %}
+        <span style="color: red;">{{ form.username.errors[0] }}</span>
+      {% endif %}
+    </div>
+    <div class="form-group">
+      {{ form.email.label }}<br>
+      {{ form.email(size=32, class="form-control") }}<br>
+      {% if form.email.errors %}
+        <span style="color: red;">{{ form.email.errors[0] }}</span>
+      {% endif %}
+    </div>
+    <div class="form-group">
+      {{ form.password.label }}<br>
+      {{ form.password(size=32, class="form-control") }}<br>
+      {% if form.password.errors %}
+        <span style="color: red;">{{ form.password.errors[0] }}</span>
+      {% endif %}
+    </div>
+    <div class="form-group">
+      {{ form.confirm_password.label }}<br>
+      {{ form.confirm_password(size=32, class="form-control") }}<br>
+      {% if form.confirm_password.errors %}
+        <span style="color: red;">{{ form.confirm_password.errors[0] }}</span>
+      {% endif %}
+    </div>
+    <div class="form-group">
+      {{ form.submit(class="btn btn-primary") }}
+    </div>
+  </form>
+{% endblock %}

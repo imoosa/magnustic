@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>SEO Analysis Report</title>
+    <style>
+        /* Main Styles */
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            line-height: 1.5;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 15px;
+            font-size: 13px;
+        }
+        
+        /* Header */
+        .report-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #44bbbf;
+        }
+        
+        .report-header h1 {
+            color: #122D41;
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+        
+        .analyzed-url {
+            color: #e91e63;
+            font-size: 16px;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+        
+        .report-date {
+            color: #666;
+            font-style: italic;
+            font-size: 12px;
+        }
+        
+        /* Section Spacing */
+        .section-spacer {
+            margin-bottom: 25px;
+        }
+        
+        /* Moz Metrics */
+        .moz-metrics-card {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #00ffff;
+            box-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
+        }
+        
+        .moz-metrics-grid {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .moz-metric-item {
+            min-width: 120px;
+        }
+        
+        .moz-metric-label {
+            font-size: 13px;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        
+        .moz-metric-value {
+            font-size: 24px;
+            color: #e91e63;
+            font-weight: bold;
+        }
+        
+        /* Performance Metrics */
+        .metrics-horizontal-wrapper {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .metrics-card {
+            flex: 1;
+            min-width: 280px;
+            background-color: #ffffff;
+            border: 1px solid #00ffff;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
+        }
+        
+        .metrics-card h3 {
+            text-align: center;
+            color: #122D41;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .metric-item {
+            margin-bottom: 10px;
+            padding: 8px;
+            background: rgba(0,0,0,0.02);
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .metric-label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        
+        .performance-score {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            font-weight: bold;
+            font-size: 16px;
+            margin: 5px auto;
+        }
+        
+        .performance-metric {
+            font-weight: bold;
+            font-size: 14px;
+            color: #122D41;
+        }
+        
+        /* Report Sections */
+        .report-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .card-box {
+            background-color: #009c8f;
+            color: white;
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            font-size: 12px;
+        }
+
+        .card-box h3 {
+            text-align: center;
+            font-size: 16px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 8px;
+        }
+
+        .card-box p {
+            margin: 8px 0;
+            line-height: 1.4;
+        }
+
+        .card-box p strong {
+            color: #ffffff;
+        }
+        
+        /* Full-width section */
+        .full-width-section {
+            grid-column: 1 / -1;
+        }
+        
+        /* Footer */
+        .report-footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+            color: #666;
+            font-size: 12px;
+        }
+        
+        /* Color Classes for Performance Scores */
+        .score-good { background-color: #0CCE6B; color: white; }
+        .score-average { background-color: #FFA400; color: black; }
+        .score-poor { background-color: #FF4E42; color: white; }
+        
+        .recommendations-box {
+            background: white;
+            border: 1px solid #00ffff;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            box-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
+        }
+        .recommendations-container h3 {
+            color: #122D41;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        .recommendations-list {
+            padding-left: 20px;
+            margin: 0;
+        }
+        .recommendations-list li {
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+
+        /* Print Specific Styles */
+        @media print {
+            body {
+                padding: 10mm;
+                background: white;
+                font-size: 11pt;
+            }
+            .metrics-card {
+                page-break-inside: avoid;
+            }
+            .section-spacer {
+                margin-bottom: 15mm;
+            }
+            .moz-metrics-card,
+            .metrics-card {
+                margin-bottom: 8mm;
+            }
+        }
+    </style>
+</head>
+<body>
+    {% macro get_score_class(score) %}
+        {% set score = score|float %}
+        {% if score >= 90 %}
+            score-good
+        {% elif score >= 50 %}
+            score-average
+        {% else %}
+            score-poor
+        {% endif %}
+    {% endmacro %}
+
+   
+
+    <div class="report-header">
+        <h1>SEO Analysis Report</h1>
+        <div class="analyzed-url">{{ metrics["URL"][0]|replace("https://", "")|replace("http://", "") }}</div>
+        <div class="report-date">Generated on: {{ now.strftime('%Y-%m-%d %H:%M') }}</div>
+    </div>
+
+     {% if recommendations %}
+    <div class="recommendations-box">
+        <h3>SEO Recommendations</h3>
+        <ul class="recommendations-list">
+            {% for recommendation in recommendations %}
+                <li>{{ recommendation }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+     <div class="moz-metrics-card">
+        <div class="moz-metrics-grid">
+            <div class="moz-metric-item">
+                <div class="moz-metric-label">Domain Authority</div>
+                <div class="moz-metric-value">{{ metrics["Domain Authority"][0] if "Domain Authority" in metrics else "N/A" }}</div>
+            </div>
+            <div class="moz-metric-item">
+                <div class="moz-metric-label">Linking Domains</div>
+                <div class="moz-metric-value">{{ metrics["Backlink Domain"][0] if "Backlink Domain" in metrics else "N/A" }}</div>
+            </div>
+            <div class="moz-metric-item">
+                <div class="moz-metric-label">Page Authority</div>
+                <div class="moz-metric-value">{{ metrics["Page Authority"][0] if "Page Authority" in metrics else "N/A" }}</div>
+            </div>
+            <div class="moz-metric-item">
+                <div class="moz-metric-label">Spam Score</div>
+                <div class="moz-metric-value">{{ metrics["Spam Score"][0] if "Spam Score" in metrics else "N/A" }}</div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="metrics-horizontal-wrapper">
+        
+        <div class="metrics-card">
+            <h3>PageSpeed Desktop</h3>
+            <div class="metrics-grid">
+                <div class="metric-item">
+                    <span class="metric-label">Performance Score</span>
+                    <span class="performance-score {{ get_score_class(metrics['Performance Score (Desktop)'][0]) }}">
+                        {{ metrics["Performance Score (Desktop)"][0] }}
+                    </span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">First Contentful Paint</span>
+                    <span class="performance-metric">{{ metrics["First Contentful Paint (Desktop)"][0] }} s</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Speed Index</span>
+                    <span class="performance-metric">{{ metrics["Speed Index (Desktop)"][0] }} s</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Largest Contentful Paint</span>
+                    <span class="performance-metric">{{ metrics["LCP Lighthouse (Desktop)"][0] }} s</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Time to Interactive</span>
+                    <span class="performance-metric">{{ metrics["Time to Interactive (Desktop)"][0] }} s</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Layout Shift</span>
+                    <span class="performance-metric">{{ metrics["CLS Lighthouse (Desktop)"][0] }}</span>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="metrics-card">
+            <h3>PageSpeed Mobile</h3>
+            <div class="metrics-grid">
+                <div class="metric-item">
+                    <span class="metric-label">Performance Score</span>
+                    <span class="performance-score {{ get_score_class(metrics['Performance Score (Mobile)'][0]) }}">
+                        {{ metrics["Performance Score (Mobile)"][0] }}
+                    </span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">First Contentful Paint</span>
+                    <span class="performance-metric">{{ metrics["First Contentful Paint (Mobile)"][0] }} s</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Speed Index</span>
+                    <span class="performance-metric">{{ metrics["Speed Index (Mobile)"][0] }} s</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Time to Interactive</span>
+                    <span class="performance-metric">{{ metrics["Time to Interactive (Mobile)"][0] }} s</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Layout Shift</span>
+                    <span class="performance-metric">{{ metrics["CLS Lighthouse (Mobile)"][0] }}</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Largest Paint</span>
+                    <span class="performance-metric">{{ metrics["LCP Lighthouse (Mobile)"][0] }} s</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="report-section">
+        <div class="card-box">
+            <h3>Meta Data</h3>
+            <p><strong>Meta Title:</strong> {{ metrics["Meta Title"][0] }}</p>
+            <p><strong>Meta Description:</strong> {{ metrics["Meta Description"][0] }}</p>
+            <p><strong>Canonical Tag:</strong> {{ metrics["Canonical Tag"][0] }}</p>
+        </div>
+
+        <div class="card-box">
+            <h3>Content Analysis</h3>
+            <p><strong>Word Count:</strong> {{ metrics["Word Count"][0] }}</p>
+            <p><strong>H1 Tags:</strong> {{ metrics["H1 Tags"][0] }}</p>
+            <p><strong>H2 Tags:</strong> {{ metrics["H2 Tags"][0] }}</p>
+        </div>
+
+        <div class="card-box">
+            <h3>Image Details</h3>
+            <p><strong>Largest Image:</strong> {{ metrics["Largest Image Name"][0] }}</p>
+            <p><strong>Image Size:</strong> {{ metrics["Largest Image Size (KB)"][0] }} KB</p>
+        </div>
+
+        <div class="card-box">
+            <h3>Links</h3>
+            <p><strong>Internal Links:</strong> {{ metrics["Internal Links"][0] }}</p>
+            <p><strong>External Links:</strong> {{ metrics["External Links"][0] }}</p>
+            <p><strong>Broken Links:</strong> {{ metrics["Broken Links"][0] }}</p>
+        </div>
+    </div>
+
+    <div class="card-box full-width-section">
+        <h3>Structured Data</h3>
+        <p><strong>Structured Data:</strong> {{ metrics["Structured Data"][0] }}</p>
+        <p><strong>Indexability:</strong> {{ metrics["Indexability"][0] }}</p>
+        <p><strong>Response Code:</strong> {{ metrics["Response Code"][0] }}</p>
+    </div>
+
+    
+    <div class="report-footer">
+        Report generated by MAGNUSTIC SEO TOOL | {{ url_for('analyze_single_url', _external=True) }}
+    </div>
+</body>
+</html>

@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>SEO Analysis Report</title>
+    <style>
+        /* Main Styles */
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            line-height: 1.5;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 15px;
+            font-size: 13px;
+        }
+        
+        /* Header */
+        .report-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #44bbbf;
+        }
+        
+        .report-header h1 {
+            color: #122D41;
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+        
+        .analyzed-url {
+            color: #e91e63;
+            font-size: 16px;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+        
+        .report-date {
+            color: #666;
+            font-style: italic;
+            font-size: 12px;
+        }
+        
+        /* Section Spacing */
+        .section-spacer {
+            margin-bottom: 25px;
+        }
+        
+        /* Moz Metrics */
+        .moz-metrics-card {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #00ffff;
+            box-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
+        }
+        
+        .moz-metrics-grid {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .moz-metric-item {
+            min-width: 120px;
+        }
+        
+        .moz-metric-label {
+            font-size: 13px;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        
+        .moz-metric-value {
+            font-size: 24px;
+            color: #e91e63;
+            font-weight: bold;
+        }
+        
+        /* Performance Metrics */
+        .metrics-horizontal-wrapper {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .metrics-card {
+            flex: 1;
+            min-width: 280px;
+            background-color: #ffffff;
+            border: 1px solid #00ffff;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
+        }
+        
+        .metrics-card h3 {
+            text-align: center;
+            color: #122D41;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .metric-item {
+            margin-bottom: 10px;
+            padding: 8px;
+            background: rgba(0,0,0,0.02);
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .metric-label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        
+        .performance-score {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            font-weight: bold;
+            font-size: 16px;
+            margin: 5px auto;
+        }
+        
+        .performance-metric {
+            font-weight: bold;
+            font-size: 14px;
+            color: #122D41;
+        }
+        
+        /* Report Sections */
+        .report-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .card-box {
+            background-color: #009c8f;
+            color: white;
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            font-size: 12px;
+        }
+
+        .card-box h3 {
+            text-align: center;
+            font-size: 16px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 8px;
+        }
+
+        .card-box p {
+            margin: 8px 0;
+            line-height: 1.4;
+        }
+
+        .card-box p strong {
+            color: #ffffff;
+        }
+        
+        /* Full-width section */
+        .full-width-section {
+            grid-column: 1 / -1;
+        }
+        
+        /* Footer */
+        .report-footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+            color: #666;
+            font-size: 12px;
+        }
+        
+        /* Color Classes for Performance Scores */
+        .score-good { background-color: #0CCE6B; color: white; }
+        .score-average { background-color: #FFA400; color: black; }
+        .score-poor { background-color: #FF4E42; color: white; }
+        
+        .recommendations-box {
+            background: white;
+            border: 1px solid #00ffff;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            box-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
+        }
+        .recommendations-container h3 {
+            color: #122D41;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        .recommendations-list {
+            padding-left: 20px;
+            margin: 0;
+        }
+        .recommendations-list li {
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+
+        /* Print Specific Styles */
+        @media print {
+            body {
+                padding: 10mm;
+                background: white;
+                font-size: 11pt;
+            }
+            .metrics-card {
+                page-break-inside: avoid;
+            }
+            .section-spacer {
+                margin-bottom: 15mm;
+            }
+            .moz-metrics-card,
+            .metrics-card {
+                margin-bottom: 8mm;
+            }
+        }
+    </style>
+</head>
+<body>
+    {% macro get_score_class(score) %}
+        {% set score = score|float %}
+        {% if score >= 90 %}
+            score-good
+        {% elif score >= 50 %}
+            score-average
+        {% else %}
+            score-poor
+        {% endif %}
+    {% endmacro %}
+
+   
+
+    <div class="report-header">
+        <h1>SEO Analysis Report</h1>
+        <div class="analyzed-url">{{ metrics["URL"][0]|replace("https://", "")|replace("http://", "") }}</div>
+        <div class="report-date">Generated on: {{ now.strftime('%Y-%m-%d %H:%M') }}</div>
+    </div>
+
+     {% if recommendations %}
+    <div class="recommendations-box">
+        <h3>SEO Recommendations</h3>
+        <ul class="recommendations-list">
+            {% for recommendation in recommendations %}
+                <li>{{ recommendation }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+     <div class="moz-metrics-card">
+        <div class="moz-metrics-grid">
+            <div class="moz-metric-item">
+                <div class="moz-metric-label">Domain Authority</div>
+                <div class="moz-metric-value">{{ metrics["Domain Authority"][0] if "Domain Authority" in metrics else "N/A" }}</div>
+            </div>
+            <div class="moz-metric-item">
+                <div class="moz-metric-label">Linking Domains</div>
+                <div class="moz-metric-value">{{ metrics["Backlink Domain"][0] if "Backlink Domain" in metrics else "N/A" }}</div>
+            </div>
+            <div class="moz-metric-item">
+                <div class="moz-metric-label">Page Authority</div>
+                <div class="moz-metric-value">{{ metrics["Page Authority"][0] if "Page Authority" in metrics else "N/A" }}</div>
+            </div>
+            <div class="moz-metric-item">
+                <div class="moz-metric-label">Spam Score</div>
+                <div class="moz-metric-value">{{ metrics["Spam Score"][0] if "Spam Score" in metrics else "N/A" }}</div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="metrics-horizontal-wrapper">
+        
+        <div class="metrics-card">
+            <h3>PageSpeed Desktop</h3>
+            <div class="metrics-grid">
+                <div class="metric-item">
+                    <span class="metric-label">Performance Score</span>
+                    <span class="performance-score {{ get_score_class(metrics['Performance Score (Desktop)'][0]) }}">
+                        {{ metrics["Performance Score (Desktop)"][0] }}
+                    </span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">First Contentful Paint</span>
+                    <span class="performance-metric">{{ metrics["First Contentful Paint (Desktop)"][0] }} s</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Speed Index</span>
+                    <span class="performance-metric">{{ metrics["Speed Index (Desktop)"][0] }} s</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Largest Contentful Paint</span>
+                    <span class="performance-metric">{{ metrics["LCP Lighthouse (Desktop)"][0] }} s</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Time to Interactive</span>
+                    <span class="performance-metric">{{ metrics["Time to Interactive (Desktop)"][0] }} s</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Layout Shift</span>
+                    <span class="performance-metric">{{ metrics["CLS Lighthouse (Desktop)"][0] }}</span>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="metrics-card">
+            <h3>PageSpeed Mobile</h3>
+            <div class="metrics-grid">
+                <div class="metric-item">
+                    <span class="metric-label">Performance Score</span>
+                    <span class="performance-score {{ get_score_class(metrics['Performance Score (Mobile)'][0]) }}">
+                        {{ metrics["Performance Score (Mobile)"][0] }}
+                    </span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">First Contentful Paint</span>
+                    <span class="performance-metric">{{ metrics["First Contentful Paint (Mobile)"][0] }} s</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Speed Index</span>
+                    <span class="performance-metric">{{ metrics["Speed Index (Mobile)"][0] }} s</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Time to Interactive</span>
+                    <span class="performance-metric">{{ metrics["Time to Interactive (Mobile)"][0] }} s</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Layout Shift</span>
+                    <span class="performance-metric">{{ metrics["CLS Lighthouse (Mobile)"][0] }}</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Largest Paint</span>
+                    <span class="performance-metric">{{ metrics["LCP Lighthouse (Mobile)"][0] }} s</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="report-section">
+        <div class="card-box">
+            <h3>Meta Data</h3>
+            <p><strong>Meta Title:</strong> {{ metrics["Meta Title"][0] }}</p>
+            <p><strong>Meta Description:</strong> {{ metrics["Meta Description"][0] }}</p>
+            <p><strong>Canonical Tag:</strong> {{ metrics["Canonical Tag"][0] }}</p>
+        </div>
+
+        <div class="card-box">
+            <h3>Content Analysis</h3>
+            <p><strong>Word Count:</strong> {{ metrics["Word Count"][0] }}</p>
+            <p><strong>H1 Tags:</strong> {{ metrics["H1 Tags"][0] }}</p>
+            <p><strong>H2 Tags:</strong> {{ metrics["H2 Tags"][0] }}</p>
+        </div>
+
+        <div class="card-box">
+            <h3>Image Details</h3>
+            <p><strong>Largest Image:</strong> {{ metrics["Largest Image Name"][0] }}</p>
+            <p><strong>Image Size:</strong> {{ metrics["Largest Image Size (KB)"][0] }} KB</p>
+        </div>
+
+        <div class="card-box">
+            <h3>Links</h3>
+            <p><strong>Internal Links:</strong> {{ metrics["Internal Links"][0] }}</p>
+            <p><strong>External Links:</strong> {{ metrics["External Links"][0] }}</p>
+            <p><strong>Broken Links:</strong> {{ metrics["Broken Links"][0] }}</p>
+        </div>
+    </div>
+
+    <div class="card-box full-width-section">
+        <h3>Structured Data</h3>
+        <p><strong>Structured Data:</strong> {{ metrics["Structured Data"][0] }}</p>
+        <p><strong>Indexability:</strong> {{ metrics["Indexability"][0] }}</p>
+        <p><strong>Response Code:</strong> {{ metrics["Response Code"][0] }}</p>
+    </div>
+
+    
+    <div class="report-footer">
+        Report generated by MAGNUSTIC SEO TOOL | {{ url_for('analyze_single_url', _external=True) }}
+    </div>
+</body>
+</html>
+
+
+
+<!-- Performance Metrics Section - Modern Design --
+<div class="performance-metrics-section" style="width: 100%; margin: 40px 0; background: linear-gradient(135deg, #f8f9fa 0%, #eef2f5 100%); padding: 30px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); font-family: 'Segoe UI', Roboto, sans-serif;">
+    <h2 style="margin-bottom: 25px; color: #2c3e50; font-weight: 600; font-size: 28px; display: flex; align-items: center;">
+        <span style="display: inline-block; width: 8px; height: 30px; background: linear-gradient(to bottom, #e91e63, #9c27b0); margin-right: 12px; border-radius: 4px;"></span>
+        Performance Metrics Dashboard
+    </h2>
+    
+    <!-- Load Speed Section --
+    <div class="metric-card" style="width: 100%; background: white; border-radius: 12px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 5px solid #4285f4;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0; color: #2c3e50; font-weight: 600; font-size: 22px; display: flex; align-items: center;">
+                <svg style="width: 24px; height: 24px; fill: #4285f4; margin-right: 10px;" viewBox="0 0 24 24">
+                    <path d="M13 2.05v3.03c3.39.49 6 3.39 6 6.92 0 .9-.18 1.75-.5 2.54l2.62 1.53c.56-1.24.88-2.62.88-4.07 0-5.18-3.95-9.45-9-9.95zM12 19c-3.87 0-7-3.13-7-7 0-3.53 2.61-6.43 6-6.92V2.05c-5.06.5-9 4.76-9 9.95 0 5.52 4.47 10 9.99 10 3.31 0 6.24-1.61 8.06-4.09l-2.6-1.53C16.17 17.98 14.21 19 12 19z"/>
+                </svg>
+                Website Load Speed
+            </h3>
+            <span style="background: #e8f0fe; color: #4285f4; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: 500;">Good Performance</span>
+        </div>
+        
+        <p style="color: #7f8c8d; margin-bottom: 25px; line-height: 1.6;">Your page loads in a reasonable amount of time. Optimizing further can improve user experience and SEO rankings.</p>
+        
+        <div class="speed-metrics" style="width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+            <!-- Server Response --
+            <div class="speed-metric" style="background: linear-gradient(to right, #f6f9ff 0%, #f0f5ff 100%); padding: 20px; border-radius: 10px; border-top: 4px solid #4285f4; position: relative;">
+                <div style="position: absolute; top: 15px; right: 15px; background: #e8f0fe; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <svg style="width: 16px; height: 16px; fill: #4285f4;" viewBox="0 0 24 24">
+                        <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/>
+                        <path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+                    </svg>
+                </div>
+                <h4 style="margin-top: 0; margin-bottom: 15px; color: #5f6368; font-weight: 500;">Server Response</h4>
+                <div style="display: flex; align-items: baseline;">
+                    <p style="font-size: 32px; font-weight: 700; color: #4285f4; margin: 0 5px 0 0;">{{ metrics["Server Response Time"][0]|float }}</p>
+                    <p style="font-size: 16px; color: #7f8c8d; margin: 0;">seconds</p>
+                </div>
+                <div style="height: 6px; background: #e0e7ff; border-radius: 3px; margin-top: 15px; overflow: hidden;">
+                    <div style="width: 75%; height: 100%; background: linear-gradient(to right, #4285f4, #34a853);"></div>
+                </div>
+            </div>
+            
+            <!-- All Page Content Loaded --
+            <div class="speed-metric" style="background: linear-gradient(to right, #f6f9ff 0%, #f0f5ff 100%); padding: 20px; border-radius: 10px; border-top: 4px solid #ea4335; position: relative;">
+                <div style="position: absolute; top: 15px; right: 15px; background: #feebee; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <svg style="width: 16px; height: 16px; fill: #ea4335;" viewBox="0 0 24 24">
+                        <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                    </svg>
+                </div>
+                <h4 style="margin-top: 0; margin-bottom: 15px; color: #5f6368; font-weight: 500;">Content Loaded</h4>
+                <div style="display: flex; align-items: baseline;">
+                    <p style="font-size: 32px; font-weight: 700; color: #ea4335; margin: 0 5px 0 0;">{{ metrics["All Content Loaded Time"][0]|float }}</p>
+                    <p style="font-size: 16px; color: #7f8c8d; margin: 0;">seconds</p>
+                </div>
+                <div style="height: 6px; background: #fce8e6; border-radius: 3px; margin-top: 15px; overflow: hidden;">
+                    <div style="width: 60%; height: 100%; background: linear-gradient(to right, #ea4335, #fbbc05);"></div>
+                </div>
+            </div>
+            
+            <!-- All Page Scripts Complete --
+            <div class="speed-metric" style="background: linear-gradient(to right, #f6f9ff 0%, #f0f5ff 100%); padding: 20px; border-radius: 10px; border-top: 4px solid #34a853; position: relative;">
+                <div style="position: absolute; top: 15px; right: 15px; background: #e6f4ea; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <svg style="width: 16px; height: 16px; fill: #34a853;" viewBox="0 0 24 24">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                    </svg>
+                </div>
+                <h4 style="margin-top: 0; margin-bottom: 15px; color: #5f6368; font-weight: 500;">Scripts Complete</h4>
+                <div style="display: flex; align-items: baseline;">
+                    <p style="font-size: 32px; font-weight: 700; color: #34a853; margin: 0 5px 0 0;">{{ metrics["Scripts Complete Time"][0]|float }}</p>
+                    <p style="font-size: 16px; color: #7f8c8d; margin: 0;">seconds</p>
+                </div>
+                <div style="height: 6px; background: #e6f4ea; border-radius: 3px; margin-top: 15px; overflow: hidden;">
+                    <div style="width: 85%; height: 100%; background: linear-gradient(to right, #34a853, #4285f4);"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Download Size Section --
+    <div class="metric-card" style="width: 100%; background: white; border-radius: 12px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 5px solid #9c27b0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0; color: #2c3e50; font-weight: 600; font-size: 22px; display: flex; align-items: center;">
+                <svg style="width: 24px; height: 24px; fill: #9c27b0; margin-right: 10px;" viewBox="0 0 24 24">
+                    <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z"/>
+                </svg>
+                Website Download Size
+            </h3>
+            <span style="background: #f3e5f5; color: #9c27b0; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: 500;">{{ metrics["Total Page Size (MB)"][0]|float }}MB Total</span>
+        </div>
+        
+        <p style="color: #7f8c8d; margin-bottom: 25px; line-height: 1.6;">Your page's file size is reasonably low which is good for Page Load Speed and user experience.</p>
+        
+        <!-- File Size Breakdown Chart --
+        <div style="width: 100%; margin-bottom: 30px;">
+            <h4 style="margin-top: 0; margin-bottom: 15px; color: #5f6368; font-weight: 500;">File Size Breakdown</h4>
+            <div style="display: flex; height: 200px; align-items: flex-end; gap: 10px; border-bottom: 1px solid #e0e0e0; padding-bottom: 10px;">
+                <!-- HTML Size --
+                <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                    {% set html_percent = (metrics["HTML Size (MB)"][0]|float / metrics["Total Page Size (MB)"][0]|float * 100)|round(1) if metrics["Total Page Size (MB)"][0]|float > 0 else 0 %}
+                    <div style="width: 80%; background: linear-gradient(to top, #4285f4, #34a853); height: calc({{ html_percent }}% * 1.8); border-radius: 8px 8px 0 0; position: relative;">
+                        <div style="position: absolute; top: -25px; left: 0; right: 0; text-align: center; font-weight: 500; color: #4285f4;">{{ metrics["HTML Size (MB)"][0]|float }}MB</div>
+                    </div>
+                    <div style="margin-top: 5px; font-weight: 500; color: #5f6368;">HTML</div>
+                </div>
+                
+                <!-- CSS Size --
+                <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                    {% set css_percent = (metrics["CSS Size (MB)"][0]|float / metrics["Total Page Size (MB)"][0]|float * 100)|round(1) if metrics["Total Page Size (MB)"][0]|float > 0 else 0 %}
+                    <div style="width: 80%; background: linear-gradient(to top, #ea4335, #fbbc05); height: calc({{ css_percent }}% * 1.8); border-radius: 8px 8px 0 0; position: relative;">
+                        <div style="position: absolute; top: -25px; left: 0; right: 0; text-align: center; font-weight: 500; color: #ea4335;">{{ metrics["CSS Size (MB)"][0]|float }}MB</div>
+                    </div>
+                    <div style="margin-top: 5px; font-weight: 500; color: #5f6368;">CSS</div>
+                </div>
+                
+                <!-- JS Size --
+                <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                    {% set js_percent = (metrics["JS Size (MB)"][0]|float / metrics["Total Page Size (MB)"][0]|float * 100)|round(1) if metrics["Total Page Size (MB)"][0]|float > 0 else 0 %}
+                    <div style="width: 80%; background: linear-gradient(to top, #fbbc05, #ea4335); height: calc({{ js_percent }}% * 1.8); border-radius: 8px 8px 0 0; position: relative;">
+                        <div style="position: absolute; top: -25px; left: 0; right: 0; text-align: center; font-weight: 500; color: #fbbc05;">{{ metrics["JS Size (MB)"][0]|float }}MB</div>
+                    </div>
+                    <div style="margin-top: 5px; font-weight: 500; color: #5f6368;">JS</div>
+                </div>
+                
+                <!-- Image Size --
+                <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                    {% set image_percent = (metrics["Image Size (MB)"][0]|float / metrics["Total Page Size (MB)"][0]|float * 100)|round(1) if metrics["Total Page Size (MB)"][0]|float > 0 else 0 %}
+                    <div style="width: 80%; background: linear-gradient(to top, #34a853, #4285f4); height: calc({{ image_percent }}% * 1.8); border-radius: 8px 8px 0 0; position: relative;">
+                        <div style="position: absolute; top: -25px; left: 0; right: 0; text-align: center; font-weight: 500; color: #34a853;">{{ metrics["Image Size (MB)"][0]|float }}MB</div>
+                    </div>
+                    <div style="margin-top: 5px; font-weight: 500; color: #5f6368;">Images</div>
+                </div>
+                
+                <!-- Other Size --
+                <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                    {% set other_percent = (metrics["Other Size (MB)"][0]|float / metrics["Total Page Size (MB)"][0]|float * 100)|round(1) if metrics["Total Page Size (MB)"][0]|float > 0 else 0 %}
+                    <div style="width: 80%; background: linear-gradient(to top, #9c27b0, #673ab7); height: calc({{ other_percent }}% * 1.8); border-radius: 8px 8px 0 0; position: relative;">
+                        <div style="position: absolute; top: -25px; left: 0; right: 0; text-align: center; font-weight: 500; color: #9c27b0;">{{ metrics["Other Size (MB)"][0]|float }}MB</div>
+                    </div>
+                    <div style="margin-top: 5px; font-weight: 500; color: #5f6368;">Other</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Compression Info --
+        <div style="background: #f5f5f5; padding: 20px; border-radius: 10px; margin-top: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span style="font-weight: 500; color: #5f6368;">Overall Compression</span>
+                <span style="font-weight: 700; color: #9c27b0; font-size: 18px;">{{ metrics["Compression Rate (%)"][0]|float }}%</span>
+            </div>
+            <div style="height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
+                <div style="width: {{ metrics['Compression Rate (%)'][0]|float }}%; height: 100%; background: linear-gradient(to right, #9c27b0, #673ab7);"></div>
+            </div>
+            <p style="color: #7f8c8d; font-size: 14px; margin-top: 15px; margin-bottom: 0;">Compression reduces file sizes for faster downloads. Aim for at least 70% compression rate.</p>
+        </div>
+    </div>
+    
+    <!-- Compression Section --
+    <div class="metric-card" style="width: 100%; background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 5px solid #ff9800;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0; color: #2c3e50; font-weight: 600; font-size: 22px; display: flex; align-items: center;">
+                <svg style="width: 24px; height: 24px; fill: #ff9800; margin-right: 10px;" viewBox="0 0 24 24">
+                    <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                </svg>
+                Compression Efficiency
+            </h3>
+            <span style="background: #fff3e0; color: #ff9800; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: 500;">{{ metrics["Compression Rate (%)"][0]|float }}% Effective</span>
+        </div>
+        
+        <p style="color: #7f8c8d; margin-bottom: 25px; line-height: 1.6;">Your website appears to be using a reasonable level of compression (Gzip, Deflate, or Brotli) for text-based resources.</p>
+        
+        <!-- Compression Details --
+        <div style="width: 100%;">
+            <h4 style="margin-top: 0; margin-bottom: 20px; color: #5f6368; font-weight: 500;">Compression by File Type</h4>
+            
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                <!-- CSS Compression --
+                <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span style="font-weight: 500; color: #5f6368;">CSS</span>
+                        <span style="font-weight: 700; color: #ea4335;">{{ metrics["CSS Compression (%)"][0]|float }}%</span>
+                    </div>
+                    <div style="height: 6px; background: #e0e0e0; border-radius: 3px; overflow: hidden;">
+                        <div style="width: {{ metrics['CSS Compression (%)'][0]|float }}%; height: 100%; background: #ea4335;"></div>
+                    </div>
+                    <div style="font-size: 12px; color: #7f8c8d; margin-top: 5px;">
+                        {{ metrics["CSS Size (MB)"][0]|float }}MB → {{ (metrics["CSS Size (MB)"][0]|float * (100 - metrics["CSS Compression (%)"][0]|float) / 100)|round(2) }}MB
+                    </div>
+                </div>
+                
+                <!-- JS Compression --
+                <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span style="font-weight: 500; color: #5f6368;">JavaScript</span>
+                        <span style="font-weight: 700; color: #fbbc05;">{{ metrics["JS Compression (%)"][0]|float }}%</span>
+                    </div>
+                    <div style="height: 6px; background: #e0e0e0; border-radius: 3px; overflow: hidden;">
+                        <div style="width: {{ metrics['JS Compression (%)'][0]|float }}%; height: 100%; background: #fbbc05;"></div>
+                    </div>
+                    <div style="font-size: 12px; color: #7f8c8d; margin-top: 5px;">
+                        {{ metrics["JS Size (MB)"][0]|float }}MB → {{ (metrics["JS Size (MB)"][0]|float * (100 - metrics["JS Compression (%)"][0]|float) / 100)|round(2) }}MB
+                    </div>
+                </div>
+                
+                <!-- Other Resources Compression --
+                <div style="background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span style="font-weight: 500; color: #5f6368;">Other Resources</span>
+                        <span style="font-weight: 700; color: #4285f4;">{{ metrics["Other Compression (%)"][0]|float }}%</span>
+                    </div>
+                    <div style="height: 6px; background: #e0e0e0; border-radius: 3px; overflow: hidden;">
+                        <div style="width: {{ metrics['Other Compression (%)'][0]|float }}%; height: 100%; background: #4285f4;"></div>
+                    </div>
+                    <div style="font-size: 12px; color: #7f8c8d; margin-top: 5px;">
+                        {{ metrics["Other Size (MB)"][0]|float }}MB → {{ (metrics["Other Size (MB)"][0]|float * (100 - metrics["Other Compression (%)"][0]|float) / 100)|round(2) }}MB
+                    </div>
+                </div>
+                
+                <!-- Non-Compressed Notice --
+                <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; display: flex; flex-direction: column; justify-content: center;">
+                    <div style="text-align: center;">
+                        <svg style="width: 24px; height: 24px; fill: #7f8c8d; margin-bottom: 5px;" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                        </svg>
+                        <p style="margin: 5px 0 0; color: #7f8c8d; font-size: 13px;">
+                            HTML and images use different compression methods
+                        </p>
+                    </div>
+                </div>
+            
+       
+
+        <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+            <p style="margin: 0; color: #5f6368; font-size: 14px; line-height: 1.5;">
+                <strong>Note:</strong> Compression shown is for HTTP-level compression only. 
+                Images use format-specific compression (JPEG, PNG, WebP) and HTML compression 
+                cannot be accurately measured from client-side analysis.
+            </p>
+        </div>
+    </div>
+</div>
+</div>
+<!--{% if metrics and metrics.get('Email Privacy Issues') %}
+<div class="tech-alert-content">
+    <h4>Email Privacy Issues</h4>
+    <p>Plain text email addresses found on this page:</p>
+    <ul>
+        {% for line_num, line in metrics.get('Email Lines', []) %}
+        <li>Line {{ line_num }}: {{ line }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}-->
+
+
+
+
+
+
+
+<!-- Performance Metrics Section 
+<div class="performance-metrics-section">
+    <h2>
+        <span class="section-decorator"></span>
+        Performance Metrics Dashboard
+    </h2>
+    
+    <!-- Load Speed Section --
+    <div class="metrik-card load-speed-card">
+        <div class="card-header">
+            <h3>
+                <svg viewBox="0 0 24 24">
+                    <path d="M13 2.05v3.03c3.39.49 6 3.39 6 6.92 0 .9-.18 1.75-.5 2.54l2.62 1.53c.56-1.24.88-2.62.88-4.07 0-5.18-3.95-9.45-9-9.95zM12 19c-3.87 0-7-3.13-7-7 0-3.53 2.61-6.43 6-6.92V2.05c-5.06.5-9 4.76-9 9.95 0 5.52 4.47 10 9.99 10 3.31 0 6.24-1.61 8.06-4.09l-2.6-1.53C16.17 17.98 14.21 19 12 19z"/>
+                </svg>
+                Website Load Speed
+            </h3>
+            
+        </div>
+        
+        <p class="card-description">Your page loads in a reasonable amount of time. Optimizing further can improve user experience and SEO rankings.</p>
+        
+        <div class="speed-metrics">
+            <!-- Server Response 
+            <div class="speed-metric server-response">
+                <div class="metric-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/>
+                        <path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+                    </svg>
+                     
+                </div>
+                <h4>Server Response</h4>
+                <div class="metrik-value-container">
+                    <p class="metrik-value">{{ metrics["Server Response Time"][0]|float }}</p>
+                    <p class="metric-unit">seconds</p>
+                </div>
+                <div style="height: 6px; background: #e0e7ff; border-radius: 3px; margin-top: 15px; overflow: hidden;">
+                    <div style="width: 75%; height: 100%; background: linear-gradient(to right, #4285f4, #34a853)"></div>
+                </div>
+            </div>
+            
+            <!-- All Page Content Loaded --
+            <div class="speed-metric content-loaded">
+                <div class="metric-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                    </svg>
+                </div>
+                <h4>Content Loaded</h4>
+                <div class="metrik-value-container">
+                    <p class="metrik-value">{{ metrics["All Content Loaded Time"][0]|float }}</p>
+                    <p class="metric-unit">seconds</p>
+                </div>
+                <div style="height: 6px; background: #e0e7ff; border-radius: 3px; margin-top: 15px; overflow: hidden;">
+                    <div style="width: 75%; height: 100%; background: linear-gradient(to right, #ea4335, #fbbc05);"></div>
+                </div>
+            </div>
+            
+            <!-- All Page Scripts Complete --
+            <div class="speed-metric scripts-complete">
+                <div class="metric-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                    </svg>
+                </div>
+                <h4>Scripts Complete</h4>
+                <div class="metrik-value-container">
+                    <p class="metrik-value">{{ metrics["Scripts Complete Time"][0]|float }}</p>
+                    <p class="metric-unit">seconds</p>
+                </div>
+                <!--<div class="progress-bar">
+                    <div class="progress-fill" style="width: 85%;"></div>
+                </div>--
+                <div style="height: 6px; background: #e0e7ff; border-radius: 3px; margin-top: 15px; overflow: hidden;">
+                    <div style="width: 75%; height: 100%; background: linear-gradient(to right, #34a853, #4285f4);"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Download Size Section --
+    <div class="metrik-card download-size-card">
+        <div class="card-header">
+            <h3>
+                <svg viewBox="0 0 24 24">
+                    <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z"/>
+                </svg>
+                Website Download Size
+            </h3>
+            <span class="size-badge">{{ metrics["Total Page Size (MB)"][0]|float }}MB Total</span>
+        </div>
+        
+        <p class="card-description">Your page's file size is reasonably low which is good for Page Load Speed and user experience.</p>
+        
+        <!-- File Size Breakdown Chart --
+        <div class="chart-container">
+            <h4>File Size Breakdown</h4>
+            <div class="chart-bars">
+                <!-- HTML Size --
+                <div class="chart-bar">
+                    {% set html_percent = (metrics["HTML Size (MB)"][0]|float / metrics["Total Page Size (MB)"][0]|float * 100)|round(1) if metrics["Total Page Size (MB)"][0]|float > 0 else 0 %}
+                    <div class="bar html-bar" style="height: calc({{ html_percent }}% * 1.8);">
+                        <div class="bar-value">{{ metrics["HTML Size (MB)"][0]|float }}MB</div>
+                    </div>
+                    <div class="bar-label">HTML</div>
+                </div>
+                
+                <!-- CSS Size --
+                <div class="chart-bar">
+                    {% set css_percent = (metrics["CSS Size (MB)"][0]|float / metrics["Total Page Size (MB)"][0]|float * 100)|round(1) if metrics["Total Page Size (MB)"][0]|float > 0 else 0 %}
+                    <div class="bar css-bar" style="height: calc({{ css_percent }}% * 1.8);">
+                        <div class="bar-value">{{ metrics["CSS Size (MB)"][0]|float }}MB</div>
+                    </div>
+                    <div class="bar-label">CSS</div>
+                </div>
+                
+                <!-- JS Size --
+                <div class="chart-bar">
+                    {% set js_percent = (metrics["JS Size (MB)"][0]|float / metrics["Total Page Size (MB)"][0]|float * 100)|round(1) if metrics["Total Page Size (MB)"][0]|float > 0 else 0 %}
+                    <div class="bar js-bar" style="height: calc({{ js_percent }}% * 1.8);">
+                        <div class="bar-value">{{ metrics["JS Size (MB)"][0]|float }}MB</div>
+                    </div>
+                    <div class="bar-label">JS</div>
+                </div>
+                
+                <!-- Image Size --
+                <div class="chart-bar">
+                    {% set image_percent = (metrics["Image Size (MB)"][0]|float / metrics["Total Page Size (MB)"][0]|float * 100)|round(1) if metrics["Total Page Size (MB)"][0]|float > 0 else 0 %}
+                    <div class="bar image-bar" style="height: calc({{ image_percent }}% * 1.8);">
+                        <div class="bar-value">{{ metrics["Image Size (MB)"][0]|float }}MB</div>
+                    </div>
+                    <div class="bar-label">Images</div>
+                </div>
+                
+                <!-- Other Size --
+                <div class="chart-bar">
+                    {% set other_percent = (metrics["Other Size (MB)"][0]|float / metrics["Total Page Size (MB)"][0]|float * 100)|round(1) if metrics["Total Page Size (MB)"][0]|float > 0 else 0 %}
+                    <div class="bar other-bar" style="height: calc({{ other_percent }}% * 1.8);">
+                        <div class="bar-value">{{ metrics["Other Size (MB)"][0]|float }}MB</div>
+                    </div>
+                    <div class="bar-label">Other</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Compression Info --
+        <div class="compression-info">
+            <div class="compression-header">
+                <span>Overall Compression</span>
+                <span class="compression-value">{{ metrics["Compression Rate (%)"][0]|float }}%</span>
+            </div>
+            <div class="compression-bar">
+                <div class="compression-fill" style="width: {{ metrics['Compression Rate (%)'][0]|float }}%;"></div>
+            </div>
+            <p class="compression-note">Compression reduces file sizes for faster downloads. Aim for at least 70% compression rate.</p>
+        </div>
+    </div>
+    
+    <!-- Compression Section --
+    <div class="metrik-card compression-card">
+        <div class="card-header">
+            <h3>
+                <svg viewBox="0 0 24 24">
+                    <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                </svg>
+                Compression Efficiency
+            </h3>
+            <span class="status-badge">{{ metrics["Compression Rate (%)"][0]|float }}% Effective</span>
+        </div>
+        
+        <p class="card-description">Your website appears to be using a reasonable level of compression (Gzip, Deflate, or Brotli) for text-based resources.</p>
+        
+        <!-- Compression Details --
+        <div class="compression-details">
+            <h4>Compression by File Type</h4>
+            
+            <div class="compression-grid">
+                <!-- CSS Compression --
+                <div class="compression-item">
+                    <div class="compression-item-header">
+                        <span>CSS</span>
+                        <span class="compression-rate">{{ metrics["CSS Compression (%)"][0]|float }}%</span>
+                    </div>
+                    <div class="compression-item-bar">
+                        <div class="compression-item-fill" style="width: {{ metrics['CSS Compression (%)'][0]|float }}%;"></div>
+                    </div>
+                    <div class="compression-size">
+                        {{ metrics["CSS Size (MB)"][0]|float }}MB → {{ (metrics["CSS Size (MB)"][0]|float * (100 - metrics["CSS Compression (%)"][0]|float) / 100)|round(2) }}MB
+                    </div>
+                </div>
+                
+                <!-- JS Compression --
+                <div class="compression-item">
+                    <div class="compression-item-header">
+                        <span>JavaScript</span>
+                        <span class="compression-rate">{{ metrics["JS Compression (%)"][0]|float }}%</span>
+                    </div>
+                    <div class="compression-item-bar">
+                        <div class="compression-item-fill" style="width: {{ metrics['JS Compression (%)'][0]|float }}%;"></div>
+                    </div>
+                    <div class="compression-size">
+                        {{ metrics["JS Size (MB)"][0]|float }}MB → {{ (metrics["JS Size (MB)"][0]|float * (100 - metrics["JS Compression (%)"][0]|float) / 100)|round(2) }}MB
+                    </div>
+                </div>
+                
+                <!-- Other Resources Compression --
+                <div class="compression-item">
+                    <div class="compression-item-header">
+                        <span>Other Resources</span>
+                        <span class="compression-rate">{{ metrics["Other Compression (%)"][0]|float }}%</span>
+                    </div>
+                    <div class="compression-item-bar">
+                        <div class="compression-item-fill" style="width: {{ metrics['Other Compression (%)'][0]|float }}%;"></div>
+                    </div>
+                    <div class="compression-size">
+                        {{ metrics["Other Size (MB)"][0]|float }}MB → {{ (metrics["Other Size (MB)"][0]|float * (100 - metrics["Other Compression (%)"][0]|float) / 100)|round(2) }}MB
+                    </div>
+                </div>
+                
+                <!-- Non-Compressed Notice --
+                <div class="non-compressed-notice">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                    </svg>
+                    <p>HTML and images use different compression methods</p>
+                </div>
+            </div>
+            
+            <div class="note-box">
+                <p>
+                    <strong>Note:</strong> Compression shown is for HTTP-level compression only. 
+                    Images use format-specific compression (JPEG, PNG, WebP) and HTML compression 
+                    cannot be accurately measured from client-side analysis.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>-->
+
+
+{% if performance_metrics %}
+  <table class="table" style="color:#00556e">
+    {% for key, value in performance_metrics.items() %}
+      <tr>
+        <td>{{ key }}</td>
+        <td>{{ value }}</td>
+      </tr>
+    {% endfor %}
+  </table>
+{% else %}
+  <div class="alert alert-warning">Performance metrics not available</div>
+{% endif %}

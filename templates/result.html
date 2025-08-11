@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEO Analysis Results</title>
+</head>
+<body>
+    <h1>SEO Analysis Results</h1>
+
+    <!-- Display Sitemap URL -->
+    <h2>Sitemap URL</h2>
+    <p>{{ sitemap_urls }}</p>
+
+    <!-- Display Metrics -->
+    <h2>SEO Metrics</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                {% for key in metrics.keys() %}
+                    <th>{{ key }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                {% for value in metrics.values() %}
+                    <td>{{ value[-1] if value else 'N/A' }}</td>
+                {% endfor %}
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Display Excel File Link -->
+    <h2>Download Results</h2>
+    <p>The full analysis has been saved to: <strong>{{ excel_file }}</strong></p>
+    <p><a href="{{ url_for('static', filename=excel_file) }}" download>Click here to download the Excel file</a></p>
+
+    <!-- Display Messages or Errors -->
+    {% if message %}
+        <div style="color: green;">
+            <h2>Success</h2>
+            <p>{{ message }}</p>
+        </div>
+    {% endif %}
+    {% if error %}
+        <div style="color: red;">
+            <h2>Error</h2>
+            <p>{{ error }}</p>
+        </div>
+    {% endif %}
+
+    <!-- Back to Home -->
+    <p><a href="{{ url_for('index') }}">Back to Home</a></p>
+</body>
+</html>

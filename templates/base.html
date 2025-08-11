@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Magnustic</title>
+  <meta content="" name="description">
+  <meta content="" name="keywords">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <link rel="icon" href="{{ url_for('static', filename='assets/images/favicon.png') }}" type="image/png">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/style.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  
+</head>
+<body>
+
+<div class="vertical-social-icons">
+   <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+        <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+</div>
+
+  <header>
+    <nav class="navbar navbar-expand-lg navbar-light">
+      <a class="navbar-brand" href="{{ url_for('analyze_single_url') }}">        
+        <img src="{{ url_for('static', filename='assets/images/magnustic300x76.png') }}" alt="Logo" width="300" height="76" class="img-fluid navbar-logo">
+      </a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <!-- In the navbar section of base.html -->
+<div class="collapse navbar-collapse" id="navbarNav">
+  <ul class="navbar-nav ml-auto">
+    {% if current_user.is_authenticated %}
+        <li>
+          <a class="btn btn-login" href="{{ url_for('dashboard', username=current_user.email) }}">Dashboard</a>
+          <a class="btn btn-login" href="{{ url_for('analyze_single_url') }}">Single Page Analysis</a>
+        </li>
+      </li>
+      <li class="nav-item">
+        <a class="btn btn-danger" href="{{ url_for('logout') }}" style="margin-top: 17px;">Logout</a>
+      </li>
+    {% else %}
+      <li>
+        <a class="btn btn-login" href="{{ url_for('login') }}">Login</a>
+      </li>
+      <li>
+        <a class="btn btn-register" href="{{ url_for('register') }}">Register</a>
+      </li>
+    {% endif %}
+  </ul>
+</div>
+    </nav>
+  </header>
+  
+
+  {% block body %}  {% endblock %}
+
+  <!--Start footer-->
+  <footer id="footer">
+  
+
+    <div class="container d-md-flex py-4">
+
+      <div class="me-md-auto text-center text-md-start">
+        <div class="copyright" style="position: relative;">
+          &copy; Copyright <strong><span>Magnustic</span></strong>. All Rights Reserved
+        </div>
+        
+      </div>
+    
+    
+  </footer><!-- End Footer -->
+</body>
+</html>

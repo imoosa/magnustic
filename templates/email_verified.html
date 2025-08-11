@@ -1,0 +1,17 @@
+<!-- templates/email_verified.html -->
+{% extends "base.html" %}
+{% block body %}
+<section class="email-verified">
+    <div class="verification-container">
+        <h2>Thank you for verifying your email!</h2>
+        <p>Your email has been successfully verified. You will be redirected to the login page shortly.</p>
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        setTimeout(function() {
+            window.location.href = "{{ url_for('login') }}";
+        }, 5000); // Redirect after 5 seconds
+    </script>
+</section>
+{% endblock %}
