@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Magnustic</title>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <link rel="icon" href="{{ url_for('static', filename='assets/images/favicon.png') }}" type="image/png">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/style.css') }}">
+</head>
+<body class="loading-page">
+<div class="loading-container">
+    <div class="loading-card">
+        <h1>🔍 Analyzing Your Website</h1>
+        <div class="analyzing-url">
+            <strong> {{ url }}</strong>
+        </div>
+        
+        <div class="progress-section">
+            <div class="progress-header">
+                <h3>Progress</h3>
+                <span id="progress-percent">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div id="progress-fill" style="width: 0%"></div>
+            </div>
+            <div id="progress-message" class="progress-message">
+                Starting analysis...
+            </div>
+        </div>
+        
+        <div class="loading-details">
+            <div class="loading-step active">
+                <div class="step-icon">🔍</div>
+                <div class="step-content">
+                    <div class="step-title">Fetching website content</div>
+                    <div class="step-description">Downloading and parsing HTML</div>
+                </div>
+            </div>
+            
+            <div class="loading-step">
+                <div class="step-icon">📊</div>
+                <div class="step-content">
+                    <div class="step-title">SEO Analysis</div>
+                    <div class="step-description">Checking meta tags, headings, and content</div>
+                </div>
+            </div>
+            
+            <div class="loading-step">
+                <div class="step-icon">⚡</div>
+                <div class="step-content">
+                    <div class="step-title">Performance Testing</div>
+                    <div class="step-description">Measuring page speed and Core Web Vitals</div>
+                </div>
+            </div>
+            
+            <div class="loading-step">
+                <div class="step-icon">🔗</div>
+                <div class="step-content">
+                    <div class="step-title">Link Analysis</div>
+                    <div class="step-description">Checking internal and external links</div>
+                </div>
+            </div>
+            
+            <div class="loading-step">
+                <div class="step-icon">📈</div>
+                <div class="step-content">
+                    <div class="step-title">Generating Report</div>
+                    <div class="step-description">Compiling recommendations and grades</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="loading-note">
+            <p>✨ Great things take time! This analysis typically takes 30-60 seconds.</p>
+            <p>Don't close this window - your results will appear here automatically.</p>
+        </div>
+        
+        <div class="loading-fun-facts">
+            <div class="fun-fact">
+                <span>💡</span>
+                <p>Did you know? Google considers page speed as a ranking factor.</p>
+            </div>
+            <div class="fun-fact">
+                <span>🔒</span>
+                <p>We're checking your SSL certificate and security headers.</p>
+            </div>
+            <div class="fun-fact">
+                <span>📱</span>
+                <p>Your site is being tested on both desktop and mobile devices.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const progressFill = document.getElementById('progress-fill');
+    const progressPercent = document.getElementById('progress-percent');
+    const progressMessage = document.getElementById('progress-message');
+    const loadingSteps = document.querySelectorAll('.loading-step');
+    
+    // Flags to control behavior
+    let showPleaseWaitMessage = false;
+    let hasFinished = false;
+    let lastProgress = 0;
+    let isConnectionAlive = true;
+    
+    // Connect to SSE endpoint
+    const eventSource = new EventSource(`{{ url_for('single_url_progress', job_id=job_id) }}`);
+    
+    // Track last update time for connection health
+    let lastUpdateTime = Date.now();
+    
+    eventSource.onopen = function() {
+        console.log('SSE connection opened');
+        isConnectionAlive = true;
+    };
+    
+    eventSource.onmessage = function(event) {
+        lastUpdateTime = Date.now();
+        isConnectionAlive = true;
+        
+        const data = JSON.parse(event.data);
+        lastProgress = data.progress;
+        
+        // Update progress
+        progressFill.style.width = data.progress + '%';
+        progressPercent.textContent = data.progress + '%';
+        progressMessage.textContent = data.message;
+        
+        // Update loading steps
+        const stepIndex = Math.floor(data.progress / 20);
+        loadingSteps.forEach((step, index) => {
+            if (index <= stepIndex) {
+                step.classList.add('active');
+                step.classList.remove('pending');
+            } else {
+                step.classList.remove('active');
+                step.classList.add('pending');
+            }
+        });
+        
+        // Check if analysis is complete
+        if (data.status === 'completed' && data.result_ready) {
+            hasFinished = true;
+            eventSource.close();
+            
+            // Add a small delay before redirecting to show 100% progress
+            setTimeout(() => {
+                window.location.href = data.redirect;
+            }, 1000);
+        }
+        
+        if (data.status === 'failed') {
+            hasFinished = true;
+            eventSource.close();
+            progressMessage.innerHTML = `<span style="color: #dc3545;">❌ ${data.message}</span>`;
+            setTimeout(() => {
+                window.location.href = "{{ url_for('analyze_single_url') }}";
+            }, 3000);
+        }
+    };
+    
+    eventSource.onerror = function() {
+        console.log('SSE error - connection lost');
+        isConnectionAlive = false;
+        
+        // Don't do anything if already finished
+        if (hasFinished) {
+            return;
+        }
+        
+        // Close the connection
+        eventSource.close();
+        
+        // Only show message if not already shown
+        if (!showPleaseWaitMessage) {
+            showPleaseWaitMessage = true;
+            
+            // Show the "Please wait" message with auto-refresh
+            showRefreshMessage();
+        }
+    };
+
+    // Function to show refresh message
+    function showRefreshMessage() {
+        progressMessage.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+                <div style="color: #247b00; font-size: 16px; margin-bottom: 10px;">
+                    ⏳ Please wait as your Report is Getting Ready.
+                </div>
+                <div style="font-size: 14px; color: #666; margin-bottom: 15px;">
+                    Connection lost, but analysis continues on server.
+                </div>
+                <div id="countdown" style="color: #2c3e50; font-weight: bold; margin: 15px 0; font-size: 16px;">
+                    Generating Report in 5 seconds...
+                </div>
+                <button id="manualRefresh" style="
+                    background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+                    color: white;
+                    padding: 10px 20px;
+                    border: none;
+                    border-radius: 2em;
+                    cursor: pointer;
+                    margin-top: 10px;
+                    font-size: 14px;
+                ">
+                    ⟳ Generate Now
+                </button>
+            </div>
+        `;
+        
+        // Auto-refresh after 5 seconds
+        let countdown = 5;
+        const countdownElement = document.getElementById('countdown');
+        let countdownInterval = null;
+        
+        function startCountdown() {
+            if (countdownInterval) clearInterval(countdownInterval);
+            
+            countdownInterval = setInterval(() => {
+                countdown--;
+                countdownElement.textContent = `Generating report in ${countdown} seconds...`;
+                
+                if (countdown <= 0) {
+                    clearInterval(countdownInterval);
+                    window.location.reload();
+                }
+            }, 1000);
+        }
+        
+        startCountdown();
+        
+        // Manual refresh button
+        document.getElementById('manualRefresh').onclick = function() {
+            clearInterval(countdownInterval);
+            this.innerHTML = 'Refreshing...';
+            this.disabled = true;
+            setTimeout(() => window.location.reload(), 500);
+        };
+        
+        // Backup: if still not refreshed after 30 seconds, force refresh
+        setTimeout(() => {
+            if (!hasFinished) {
+                window.location.reload();
+            }
+        }, 30000);
+    }
+    
+    // Monitor connection health - if no updates for 15 seconds, consider connection dead
+    const connectionMonitor = setInterval(() => {
+        if (hasFinished) {
+            clearInterval(connectionMonitor);
+            return;
+        }
+        
+        // If no updates for 15 seconds and connection appears dead
+        if (Date.now() - lastUpdateTime > 15000 && !showPleaseWaitMessage) {
+            console.log('No updates for 15 seconds, triggering refresh');
+            if (!isConnectionAlive || eventSource.readyState === EventSource.CLOSED) {
+                showPleaseWaitMessage = true;
+                showRefreshMessage();
+                clearInterval(connectionMonitor);
+            }
+        }
+    }, 5000);
+    
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', function() {
+        if (!hasFinished) {
+            eventSource.close();
+            clearInterval(connectionMonitor);
+        }
+    });
+});
+</script>
+
+<style>
+.loading-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loading-card {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 1000px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: slideUp 0.5s ease-out;
+}
+.loading-card h1 {
+    color: #2c3e50;
+    font-family: Arial, Helvetica, sans-serif;
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.analyzing-url {
+    background: #2c3e50;
+    padding: 15px;
+    border-radius: 10px;
+    margin: 20px 0;
+    border-left: 4px solid #667eea;
+    font-size: 20px;
+    word-break: break-all;
+    text-align: center;
+}
+
+.progress-section {
+    margin: 30px 0;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.progress-header h3 {
+    margin: 0;
+    color: #333;
+}
+
+#progress-percent {
+    font-size: 24px;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.progress-bar {
+    height: 12px;
+    background: #e9ecef;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+#progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2c3e50, #3498db);
+    border-radius: 6px;
+    transition: width 0.5s ease;
+}
+
+.progress-message {
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    min-height: 24px;
+}
+
+.loading-details {
+    margin: 30px 0;
+}
+
+.loading-step {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    opacity: 0.5;
+}
+
+.loading-step.active {
+    background: linear-gradient(90deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+    border-left: 4px solid #2c3e50;
+    opacity: 1;
+}
+
+.loading-step.pending {
+    opacity: 0.3;
+}
+
+.step-icon {
+    font-size: 24px;
+    margin-right: 15px;
+    width: 40px;
+    text-align: center;
+}
+
+.step-content {
+    flex: 1;
+}
+
+.step-title {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.step-description {
+    color: #666;
+    font-size: 14px;
+}
+
+.loading-note {
+    background: #e8f4fd;
+    padding: 15px;
+    border-radius: 10px;
+    margin: 20px 0;
+    border-left: 4px solid #2196f3;
+}
+
+.loading-note p {
+    margin: 5px 0;
+    color: #1976d2;
+}
+
+.loading-fun-facts {
+    margin-top: 30px;
+}
+
+.fun-fact {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    margin: 10px 0;
+    background: #f9f9f9;
+    border-radius: 8px;
+}
+
+.fun-fact span {
+    font-size: 20px;
+    margin-right: 15px;
+    width: 40px;
+    text-align: center;
+}
+
+.fun-fact p {
+    margin: 0;
+    color: #555;
+    font-size: 14px;
+}
+</style>
+</body>
+</html>

@@ -15,67 +15,240 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='assets/style.css') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <link href="https://fonts.cdnfonts.com/css/georgia" rel="stylesheet">
   
-  
+  {% block extra_css %}{% endblock %}
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
 
-<div class="vertical-social-icons">
-   <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-        <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-</div>
-
-  <header>
-    <nav class="navbar navbar-expand-lg navbar-light">
-      <a class="navbar-brand" href="{{ url_for('analyze_single_url') }}">        
-        <img src="{{ url_for('static', filename='assets/images/magnustic300x76.png') }}" alt="Logo" width="300" height="76" class="img-fluid navbar-logo">
-      </a>
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <!-- In the navbar section of base.html -->
-<div class="collapse navbar-collapse" id="navbarNav">
-  <ul class="navbar-nav ml-auto">
-    {% if current_user.is_authenticated %}
-        <li>
-          <a class="btn btn-login" href="{{ url_for('dashboard', username=current_user.email) }}">Dashboard</a>
-          <a class="btn btn-login" href="{{ url_for('analyze_single_url') }}">Single Page Analysis</a>
-        </li>
-      </li>
-      <li class="nav-item">
-        <a class="btn btn-danger" href="{{ url_for('logout') }}" style="margin-top: 17px;">Logout</a>
-      </li>
-    {% else %}
-      <li>
-        <a class="btn btn-login" href="{{ url_for('login') }}">Login</a>
-      </li>
-      <li>
-        <a class="btn btn-register" href="{{ url_for('register') }}">Register</a>
-      </li>
-    {% endif %}
-  </ul>
-</div>
-    </nav>
-  </header>
-  
-
-  {% block body %}  {% endblock %}
-
-  <!--Start footer-->
-  <footer id="footer">
-  
-
-    <div class="container d-md-flex py-4">
-
-      <div class="me-md-auto text-center text-md-start">
-        <div class="copyright" style="position: relative;">
-          &copy; Copyright <strong><span>Magnustic</span></strong>. All Rights Reserved
-        </div>
-        
+  <!-- Dashboard Grid Layout (now in base) -->
+  <div class="dashboard-grid">
+    
+    <!-- LEFT SIDEBAR - Shared across all authenticated pages -->
+    <aside class="dashboard-sidebar">
+      <div class="dashboard-logo">
+        <img src="{{ url_for('static', filename='assets/images/magnustic-logo.png') }}" alt="Logo" width="300" height="76" class="img-fluid navbar-logo">
       </div>
+      
+      <nav class="sidebar-nav">
+    <ul>
+        <!-- Single Page Analysis Option -->
+        <li data-tab="single-url">
+            <a href="{{ url_for('analyze_single_url') }}">
+                <i class="bi bi-house"></i>
+                <span>Single Page Analysis</span>
+            </a>
+        </li>
+        
+        <!-- Multiple Page Analysis Option -->
+        <li data-tab="dashboard">
+            <a href="{{ url_for('dashboard', username=current_user.email) }}">
+                <i class="bi bi-speedometer2"></i>
+                <span>Multiple Page Analysis</span>
+            </a>
+        </li>
+        
+        <!-- These options only show on Dashboard/Multiple Page Analysis -->
+        {% if request.endpoint != 'analyze_single_url' and request.endpoint != 'single_url_results' %}
+        <li data-tab="analysis-history">
+            <a href="{{ url_for('dashboard', username=current_user.email) }}#analysis-history-section">
+                <i class="bi bi-list-check"></i>
+                <span>Analysis History</span>
+            </a>
+        </li>
+        <li data-tab="plan-details">
+            <a href="{{ url_for('dashboard', username=current_user.email) }}#plan-details-section">
+                <i class="bi bi-gem"></i>
+                <span>Plan Details</span>
+            </a>
+        </li>
+        <li data-tab="performance">
+            <a href="{{ url_for('dashboard', username=current_user.email) }}#performance-section">
+                <i class="bi bi-graph-up"></i>
+                <span>Performance</span>
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+    <!-- Plan Expired Alert - Shows ONLY when plan is expired -->
+{% if plan_expired %}
+<div class="plan-expire">
+    <div class="alert alert-plan-expired" style="border-radius:10px; padding:15px; background: transparent; border:1px solid #ff4d4d;">
+        <!-- Top Row with Message and Button inline -->
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div style="font-size:24px; color:#DA0000;">
+                Plan expired, please upgrade the plan.
+            </div>
+            
+            <!-- Upgrade Button -->
+            <a href="{{ url_for('select_plan') }}" 
+               style="background:#DA0000; color:#fff; padding:8px 16px; border-radius:6px; text-decoration:none; font-size:14px;">
+               Upgrade Plan
+            </a>
+        </div>
+    </div>
+</div>
+
+
+<!-- Left Info - Shows ONLY when plan is NOT expired AND NOT on single URL page -->
+{% else %}
+    {% if request.endpoint != 'analyze_single_url' and request.endpoint != 'single_url_results' %}
+    <div style="display:flex; align-items:center; gap:15px;">
+        <i class="bi bi-exclamation-triangle" style="color:#ff4d4d; font-size:20px;"></i>
+        
+        <span class="status-value">{{ urls_remaining }}</span>
+        <span class="status-label">URLs Remaining</span>
+
+        <span class="status-value">{{ remaining_days }}</span>
+        <span class="status-label">Days Left</span>
+        
+        <span class="stat-number">{{ analyzed_sites|length }}</span>
+        <span class="stat-label">Websites Analyzed</span>
+    </div>
+    {% endif %}
+{% endif %}
+
+</nav>
+<script>
+// Sidebar navigation active state management
+document.addEventListener('DOMContentLoaded', function() {
+    const navLinks = document.querySelectorAll('.sidebar-nav li');
+    const currentPath = window.location.pathname;
+    const currentHash = window.location.hash;
     
+    function setActiveNavItem() {
+        // Remove active class from all nav items
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+        });
+        
+        // Check if we're on Single URL Analysis page
+        if (currentPath.includes('/single-url') || currentPath.includes('/analyze_single_url')) {
+            // Highlight Single Page Analysis option
+            const singleUrlNav = document.querySelector('.sidebar-nav li[data-tab="single-url"]');
+            if (singleUrlNav) singleUrlNav.classList.add('active');
+            return;
+        }
+        
+        // Check if we're on Dashboard page
+        if (currentPath.includes('/dashboard')) {
+            // Check for specific sections via hash
+            if (currentHash.includes('analysis-history')) {
+                const historyNav = document.querySelector('.sidebar-nav li[data-tab="analysis-history"]');
+                if (historyNav) historyNav.classList.add('active');
+            } 
+            else if (currentHash.includes('plan-details')) {
+                const planNav = document.querySelector('.sidebar-nav li[data-tab="plan-details"]');
+                if (planNav) planNav.classList.add('active');
+            } 
+            else if (currentHash.includes('performance')) {
+                const perfNav = document.querySelector('.sidebar-nav li[data-tab="performance"]');
+                if (perfNav) perfNav.classList.add('active');
+            } 
+            else {
+                // Default to Multiple Page Analysis
+                const dashboardNav = document.querySelector('.sidebar-nav li[data-tab="dashboard"]');
+                if (dashboardNav) dashboardNav.classList.add('active');
+            }
+            return;
+        }
+    }
     
-  </footer><!-- End Footer -->
+    // Set active state on page load
+    setActiveNavItem();
+    
+    // Handle clicks on navigation items to ensure proper highlighting
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            const anchor = this.querySelector('a');
+            if (anchor) {
+                const href = anchor.getAttribute('href');
+                const currentPathname = window.location.pathname;
+                const targetPath = href.split('#')[0];
+                
+                // If clicking on Single URL Analysis link
+                if (targetPath.includes('/single-url') || targetPath.includes('/analyze_single_url')) {
+                    if (!currentPathname.includes('/single-url')) {
+                        e.preventDefault();
+                        window.location.href = href;
+                    }
+                }
+                // If clicking on Dashboard links
+                else if (targetPath.includes('/dashboard')) {
+                    if (!currentPathname.includes('/dashboard')) {
+                        e.preventDefault();
+                        window.location.href = href;
+                    }
+                }
+            }
+        });
+    });
+    
+    // Watch for hash changes (for dashboard sections)
+    window.addEventListener('hashchange', function() {
+        if (window.location.pathname.includes('/dashboard')) {
+            setActiveNavItem();
+        }
+    });
+    
+    // Watch for navigation (back/forward buttons)
+    window.addEventListener('popstate', function() {
+        setActiveNavItem();
+    });
+});
+
+function goToSingleUrl() {
+    window.location.href = "{{ url_for('analyze_single_url') }}";
+}
+</script>
+ 
+
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="dashboard-main">
+      <!-- Top Bar with User Info -->
+      <div class="top-bar-info">
+        <div class="page-head-main">
+          <h1><i class="bi bi-activity"></i> {% block page_title %}SEO Analysis Dashboard{% endblock %}</h1>
+        </div>
+        <div class="user-profile-main">
+          <div class="user-avatar-main">
+    {% if current_user.is_authenticated %}
+        {{ current_user.name[0]|upper if current_user.name else current_user.email[0]|upper }}
+    {% else %}
+        G
+    {% endif %}
+</div>
+          <div class="user-info-main">
+            <div class="user-name-main">{{ current_user.name if current_user.name else current_user.email.split('@')[0] }}</div>
+            <div class="user-email-main">{{ current_user.email }}</div>
+          </div>
+          <a href="{{ url_for('logout') }}" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+      </div>
+
+      <!-- Main Content Block - Child templates will inject content here -->
+      {% block main_content %}{% endblock %}
+    </main>
+  </div>
+
+  <script>
+    // User dropdown functionality (if you still want it)
+    document.addEventListener('DOMContentLoaded', function() {
+      // Sidebar navigation active state management
+      const currentPath = window.location.pathname;
+      const navLinks = document.querySelectorAll('.sidebar-nav li a');
+      
+      navLinks.forEach(link => {
+        if (link.getAttribute('href') !== '#' && currentPath.includes(link.getAttribute('href'))) {
+          link.closest('li').classList.add('active');
+        }
+      });
+    });
+  </script>
+
+  {% block extra_js %}{% endblock %}
 </body>
 </html>

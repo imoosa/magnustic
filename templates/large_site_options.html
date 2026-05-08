@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Large Website Detected</h2>
+    
+    <div class="alert alert-warning">
+        <h4>Warning: Large Sitemap Detected</h4>
+        <p>This website has a very large sitemap. Analyzing all URLs would be resource-intensive.</p>
+        
+        {% if original_url %}
+        <p><strong>Original URL:</strong> {{ original_url }}</p>
+        {% else %}
+        <p><strong>Original URL:</strong> Not available</p>
+        {% endif %}
+        
+        {% if sitemap_url %}
+        <p><strong>Sitemap:</strong> {{ sitemap_url }}</p>
+        {% else %}
+        <p><strong>Sitemap:</strong> Not available</p>
+        {% endif %}
+        
+        {% if url_count > 0 %}
+        <p><strong>Estimated URLs:</strong> {{ "{:,}".format(url_count) }}</p>
+        {% endif %}
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Analysis Options</h5>
+            
+            {% if sitemap_url %}
+            <form method="POST" action="{{ url_for('analyze_sampled_urls') }}">
+                <div class="mb-3">
+                    <label for="sample_size" class="form-label">
+                        Sample Size (Recommended: 50-200 URLs)
+                    </label>
+                    <input type="number" class="form-control" id="sample_size" 
+                           name="sample_size" value="100" min="10" max="1000">
+                    <div class="form-text">
+                        Analyze a representative sample of URLs instead of all URLs.
+                        Larger samples will take longer to analyze.
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    Analyze Sample
+                </button>
+                <a href="{{ url_for('analyze_with_selection') }}" class="btn btn-secondary">
+                    Back to Regular Analysis
+                </a>
+            </form>
+            {% else %}
+            <div class="alert alert-danger">
+                <p>No sitemap URL available. Please go back and try again.</p>
+            </div>
+            <a href="{{ url_for('analyze_with_selection') }}" class="btn btn-secondary">
+                Back to Regular Analysis
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

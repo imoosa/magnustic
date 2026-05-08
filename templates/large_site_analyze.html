@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Analyze Large Website</h2>
+    <div class="alert alert-info">
+        <h4>Large Website Analysis</h4>
+        <p>Enter the URL of a large website to analyze a sample of its pages.</p>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Enter Website URL</h5>
+            <form method="POST">
+                {{ form.hidden_tag() }}
+                <div class="mb-3">
+                    {{ form.url.label(class="form-label") }}
+                    {{ form.url(class="form-control", placeholder="https://example.com or https://example.com/sitemap.xml") }}
+                    {% if form.url.errors %}
+                        <div class="text-danger">
+                            {% for error in form.url.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <div class="form-text">
+                        Enter either the website URL or direct sitemap URL.
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Continue</button>
+                <a href="{{ url_for('analyze_with_selection') }}" class="btn btn-secondary">Back to Regular Analysis</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

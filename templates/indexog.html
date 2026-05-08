@@ -1,0 +1,1574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Single URL Analysis - Magnustic</title>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <link rel="icon" href="{{ url_for('static', filename='assets/images/favicon.png') }}" type="image/png">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/style.css') }}">
+</head>
+<body class="index-page">
+<section class="index">        
+<div class="index">
+    <div class="index-container">
+        
+        <div class="dashboard-return-btn" style="margin-top: 0px; margin-bottom: 25px; padding: 15px;  border-radius: 8px; border-left: 4px solid #007bff;">
+            <a href="{{ url_for('dashboard', username=current_user.email) }}" 
+               style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 10px 15px; background: linear-gradient(135deg, #2fe7ff 0%, #002d61 100%); color: white; text-decoration: none; border-radius: 5px; font-weight: 600; transition: all 0.3s;">
+                <i class="fas fa-arrow-left"></i>
+                Return to Dashboard
+            </a>
+           
+            </div>
+        <div class="main-content-wrapper">
+            <!-- Left side - URL Form (70%) -->
+             
+            <div class="left-side">
+                <div class="form-box">
+                    <h1>SEO Analysis</h1>
+                    <form method="POST" action="{{ url_for('analyze_single_url', username=current_user.email) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <div class="single-form-group">
+                            <label for="url">Enter URL to Analyze:</label>
+                            <input type="text" id="url" name="url" placeholder="https://example.com" required>
+                        </div>
+                        <div class="button-wrapper">
+                            <button type="submit" class="index-btn">Analyze</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+<!-- Try this with more explicit styling -->
+<div class="right-side">
+    <div class="algo-box-update">
+        <h3>Latest Google Algorithm</h3>
+        {% if latest_update %}
+        <div class="update-contents">
+            <p class="update-title">{{ latest_update.title }}</p>
+            <p class="update-descriptions">{{ latest_update.summary }}</p>
+            <p><strong>Published:</strong> {{ latest_update.published_date }}</p>
+            <p><strong>Duration:</strong> {{ latest_update.duration }}</p>
+            
+            <div class="update-metas">
+                <a href="{{ latest_update.link }}" class="official-link" target="_blank">Visit Official Website</a>
+            </div>
+        </div>
+        {% else %}
+        <div class="no-update">
+            <p>No recent algorithm update found.</p>
+            <p class="update-note">Check back later for updates.</p>
+        </div>
+        {% endif %}
+        </div>
+    </div>
+</div>
+
+</div>
+</div>
+
+
+
+
+<script>
+// Single URL analysis form submission
+document.querySelector('form[method="POST"]').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const form = this;
+    const url = form.querySelector('#url').value;
+    const button = form.querySelector('button[type="submit"]');
+    const originalButtonText = button.textContent;
+    
+    if (!url) {
+        alert('Please enter a URL');
+        return;
+    }
+    
+    // Disable button and show loading state
+    button.disabled = true;
+    button.textContent = 'Analyzing...';
+    button.classList.add('loading');
+    
+    try {
+        const response = await fetch('/single-url', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': form.querySelector('[name="csrf_token"]').value
+            },
+            body: JSON.stringify({ url: url })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Redirect to loading page
+            window.location.href = data.redirect;
+        } else {
+            alert('Error: ' + (data.message || 'Unknown error'));
+            button.disabled = false;
+            button.textContent = originalButtonText;
+            button.classList.remove('loading');
+        }
+        
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+        button.disabled = false;
+        button.textContent = originalButtonText;
+        button.classList.remove('loading');
+    }
+});
+</script>
+            
+
+        </form>
+    </div>
+  
+
+    
+    {% if metrics %}
+
+<div id="analysisModal" class="model">
+<div class="model-content">
+    <span class="close-btn">&times;</span>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+    <h2 class="model-title">Analysis Results</h2>
+    {% if metrics and metrics["URL"] %}
+    <a href="{{ url_for('download_report', session_id=session_id) }}" 
+       class="btn btn-primary download-btn">
+       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+           <polyline points="7 10 12 15 17 10"></polyline>
+           <line x1="12" y1="15" x2="12" y2="3"></line>
+       </svg>
+       Download PDF
+    </a>
+    {% else %}
+    <div class="tooltip-wrapper">
+        <button class="btn btn-primary download-btn disabled-btn"
+           style="background: #cccccc; border: solid 2px #999999; color: #666666; padding: 8px 16px; text-decoration: none; border-radius: 10px; display: inline-flex; align-items: center; gap: 8px; font-size: 14px; cursor: not-allowed;"
+           title="Please perform an analysis first">
+           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+               <polyline points="7 10 12 15 17 10"></polyline>
+               <line x1="12" y1="15" x2="12" y2="3"></line>
+           </svg>
+           Download PDF
+        </button>
+        <span class="tooltip-text">Please perform an analysis first</span>
+    </div>
+    {% endif %}
+</div>
+
+<div class="moz-metrics-card" style="text-align:center; margin-top: 30px;">
+    <h2 style="color: #f8f9fa;">Showing results for<br><span style="color:#e91e63;">{{ metrics["URL"][0]|replace("https://", "")|replace("http://", "") }}</span></h2>
+    <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 40px; margin-top: 20px;">
+        <div>
+            <div style="font-size: 16px; color: #fff;">Domain Authority</div>
+            <div style="font-size: 32px; color: #e91e63;">{{ metrics["Domain Authority"][0] }}</div>
+        </div>
+        <div>
+            <div style="font-size: 16px; color: #fff;">Page Authority</div>
+            <div style="font-size: 32px; color: #e91e63;">{{ metrics["Page Authority"][0] }}</div>
+        </div>
+        <div>
+            <div style="font-size: 16px; color: #fff;">Spam Score</div>
+            <div style="font-size: 32px; color: #e91e63;">{{ metrics["Spam Score"][0] }}</div>
+        </div>
+        <div>
+            <div style="font-size: 16px; color: #fff;">Backlinks</div>
+            <div style="font-size: 32px; color: #e91e63;">{{ metrics["Total Backlinks"][0] }}</div>
+        </div>
+        <div>
+            <div style="font-size: 16px; color: #fff;">Linking Root Domains</div>
+            <div style="font-size: 32px; color: #e91e63;">{{ metrics["Backlink Domain"][0] }}</div>
+        </div>
+    </div>
+
+    <!-- Add this section after the modal title in index.html-->
+     {% if category_grades is not none and category_scores is not none %}
+    <div class="grade-summary">
+    <h3>SEO Grade Summary</h3>
+    <div class="grade-overall">
+        <div class="grade-container">
+            <span class="grade-label">Overall Grade</span>
+            <div class="grade-display grade-{{ grade|lower }}">{{ grade }}</div>
+            <div class="grade-percent">{{ "%.1f"|format(weighted_score) }}%</div>
+        </div>
+ </div>
+    
+    <div class="grade-categories">
+        <div class="grade-category">
+            <div class="category-content">
+            <span class="category-name">Site Health</span>
+            <div class="grade-display grade-{{ category_grades['site_health']|lower }}">
+                {{ category_grades['site_health'] }}
+            </div>
+
+        </div>
+        </div>
+        <div class="grade-category">
+            <div class="category-content">
+            <span class="category-name">On-Page SEO</span>
+            <div class="grade-display grade-{{ category_grades['on_page_seo']|lower }}">
+                {{ category_grades['on_page_seo'] }}
+            </div>
+        </div>
+        </div>
+        <div class="grade-category">
+            <div class="category-content">
+            <span class="category-name">Usability</span>
+            <div class="grade-display grade-{{ category_grades['usability']|lower }}">
+                {{ category_grades['usability'] }}
+            </div>
+        </div>
+        </div>
+        <div class="grade-category">
+            <div class="category-content">
+            <span class="category-name">Social Appearance</span>
+            <div class="grade-display grade-{{ category_grades['social_appearance']|lower }}">
+                {{ category_grades['social_appearance'] }}
+            </div>
+        </div>
+        </div>
+        <div class="grade-category">
+            <div class="category-content">
+            <span class="category-name">Links</span>
+            <div class="grade-display grade-{{ category_grades['links']|lower }}">
+                {{ category_grades['links'] }}
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+           
+{% if from_post %}
+<div class="seo-report-section">
+    <h2 class="seo-report-title">
+        <span class="seo-report-title-bar"></span>
+        Recommendations
+    </h2>
+    {% if recommendations %}
+    <div id="recommendationsContainer">
+        {% for item in recommendations %}
+        <div class="recommendation-card">
+            <div class="recommendation-content">
+                <div class="recommendation-icon">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <div class="recommendation-text">
+                    <p class="recommendation-message"></p><strong>{{ item }}</strong></p>
+                    
+                    <!-- Blog link based on recommendation type -->
+                    {% if "Domain Authority" in item %}
+                    <a href="/blog/how-to-improve-domain-authority" class="recommendation-link">
+                        <i class="fas fa-book"></i> Read: How to Improve Domain Authority
+                    </a>
+                    {% elif "CLS" in item %}
+                    <a href="/blog/fixing-cumulative-layout-shift" class="recommendation-link">
+                        <i class="fas fa-book"></i> Guide: Fixing CLS Issues
+                    </a>
+                    {% elif "LCP" in item %}
+                    <a href="/blog/improve-largest-contentful-paint" class="recommendation-link">
+                        <i class="fas fa-book"></i> Learn: Optimizing LCP
+                    </a>
+                    {% elif "Meta Title" in item %}
+                    <a href="/blog/perfect-meta-tags" class="recommendation-link">
+                        <i class="fas fa-book"></i> Tips: Writing Effective Meta Titles
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="no-recommendations">No recommendations needed - your site is performing well!</p>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if screenshots %}
+<div class="device-preview-wrapper">
+    <h2 class="device-preview-title">
+        <span class="device-preview-bar"></span>
+        Device Rendering Preview
+    </h2>
+
+    <div class="device-preview-container">
+        <!-- Desktop Screenshot (center) -->
+        <div class="desktop-wrapper">
+            <div class="desktop-frame">
+                <img src="{{ screenshots.desktop }}" alt="Desktop View" class="desktop-img">
+            </div>
+        </div>
+
+        <!-- Tablet Screenshot (left) -->
+        <div class="tablet-wrapper">
+            <div class="tablet-frame">
+                <img src="{{ screenshots.tablet }}" alt="Tablet View" class="tablet-img">
+            </div>
+        </div>
+
+        <!-- Mobile Screenshot (right) -->
+        <div class="mobile-wrapper">
+            <div class="mobile-frame">
+                <img src="{{ screenshots.mobile }}" alt="Mobile View" class="mobile-img">
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+
+
+
+{% if metrics %}
+<!-- Performance Metrics Section -->
+<div class="performance-metriks-section">
+    <h2>
+        <span class="section-decorator"></span>
+        Performance Metrics Dashboard
+    </h2>
+    
+    <!-- Load Speed Section -->
+    <div class="metrik-card load-speed-card">
+        <div class="card-header">
+            <h3>
+                <svg viewBox="0 0 24 24">
+                    <path d="M13 2.05v3.03c3.39.49 6 3.39 6 6.92 0 .9-.18 1.75-.5 2.54l2.62 1.53c.56-1.24.88-2.62.88-4.07 0-5.18-3.95-9.45-9-9.95zM12 19c-3.87 0-7-3.13-7-7 0-3.53 2.61-6.43 6-6.92V2.05c-5.06.5-9 4.76-9 9.95 0 5.52 4.47 10 9.99 10 3.31 0 6.24-1.61 8.06-4.09l-2.6-1.53C16.17 17.98 14.21 19 12 19z"/>
+                </svg>
+                Website Load Speed
+            </h3>
+        </div>
+        
+        <p class="card-description">Your page loads in a reasonable amount of time. Optimizing further can improve user experience and SEO rankings.</p>
+        
+        <div class="speed-metrics">
+            <!-- Server Response -->
+            <div class="speed-metric server-response">
+                <div class="metric-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/>
+                        <path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+                    </svg>
+                </div>
+                <h4>Server Response</h4>
+                <div class="metrik-value-container">
+                    <p class="metrik-value">{{ metrics["Server Response Time"][0]|float }}</p>
+                    <p class="metric-unit">seconds</p>
+                </div>
+                <div style="height: 6px; background: #e0e7ff; border-radius: 3px; margin-top: 15px; overflow: hidden;">
+                    <div style="width: 75%; height: 100%; background: linear-gradient(to right, #4285f4, #34a853)"></div>
+                </div>
+            </div>
+
+            <!-- All Page Content Loaded -->
+            <div class="speed-metric content-loaded">
+                <div class="metric-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                    </svg>
+                </div>
+                <h4>Content Loaded</h4>
+                <div class="metrik-value-container">
+                    <p class="metrik-value">{{ metrics["All Content Loaded Time"][0]|float }}</p>
+                    <p class="metric-unit">seconds</p>
+                </div>
+                <div style="height: 6px; background: #e0e7ff; border-radius: 3px; margin-top: 15px; overflow: hidden;">
+                    <div style="width: 75%; height: 100%; background: linear-gradient(to right, #ea4335, #fbbc05);"></div>
+                </div>
+            </div>
+
+            <!-- All Page Scripts Complete -->
+            <div class="speed-metric scripts-complete">
+                <div class="metric-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                    </svg>
+                </div>
+                <h4>Scripts Complete</h4>
+                <div class="metrik-value-container">
+                    <p class="metrik-value">{{ metrics["Scripts Complete Time"][0]|float }}</p>
+                    <p class="metric-unit">seconds</p>
+                </div>
+                <div style="height: 6px; background: #e0e7ff; border-radius: 3px; margin-top: 15px; overflow: hidden;">
+                    <div style="width: 75%; height: 100%; background: linear-gradient(to right, #34a853, #4285f4);"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Download Size Section -->
+    <div class="metrik-card download-size-card">
+        <div class="card-header">
+            <h3>
+                <svg viewBox="0 0 24 24">
+                    <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z"/>
+                </svg>
+                Website Download Size
+            </h3>
+            <span class="size-badge">{{ metrics["Total Page Size (MB)"][0]|float }}MB Total</span>
+        </div>
+
+        <p class="card-description">Your page's file size is reasonably low which is good for Page Load Speed and user experience.</p>
+        
+        <!-- File Size Breakdown Chart -->
+        <div class="chart-container">
+            <h4>File Size Breakdown</h4>
+            <div class="chart-bars">
+                {% set total = metrics["Total Page Size (MB)"][0]|float %}
+                {% set parts = {
+                    "HTML": metrics["HTML Size (MB)"][0]|float,
+                    "CSS": metrics["CSS Size (MB)"][0]|float,
+                    "JS": metrics["JS Size (MB)"][0]|float,
+                    "Images": metrics["Image Size (MB)"][0]|float,
+                    "Other": metrics["Other Size (MB)"][0]|float
+                } %}
+                {% for label, value in parts.items() %}
+                    {% set percent = (value / total * 100)|round(1) if total > 0 else 0 %}
+                    <div class="chart-bar">
+                        <img 
+                            src="/static/assets/images/{{ label|lower }}.png" 
+                            alt="{{ label }} icon" 
+                            class="bar-icon desktop-only"
+                            />
+                        <div class="bar {{ label|lower }}-bar" style="height: {{ [(percent * 3), 10]|max }}%;">
+                           
+                            <div class="bar-value">{{ value }}MB</div>
+                        </div>
+                        
+                        <div class="bar-label">{{ label }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-warning">Performance metrics not available</div>
+{% endif %}
+
+
+{% if metrics['Email Privacy Issues'] %}
+<div class="performance-metrics-section">
+    <h2 class="section-heading">
+        <span class="section-bar"></span>
+        Usability
+    </h2>
+
+    <div class="usability-card">
+        {% if metrics['Email Privacy Issues']|length > 0 %}
+            <p class="email-warning-title">
+                The following email addresses were found in the page source (potential spam risk):
+            </p>
+            <div class="email-badges">
+                {% for email in metrics['Email Privacy Issues'] %}
+                    <span class="email-badge">{{ email }}</span>
+                {% endfor %}
+            </div>
+            <div class="alert alert-warning mt-3">
+                <strong>Warning:</strong> Exposed email addresses may receive spam. Consider using contact forms instead.
+            </div>
+        {% else %}
+            <p class="text-success">No email addresses found in page source.</p>
+        {% endif %}
+    </div>
+{% endif %}
+
+<div class="tech-grid">
+    <div class="tech-card">
+        <h4>Flash Used?</h4>
+        <p>
+            {% if metrics.get('Flash Used')[0] == "Yes" %}
+                <i class="fas fa-check-circle success-icon"></i>
+            {% else %}
+                <i class="fas fa-times-circle error-icon"></i>
+            {% endif %}
+        </p>
+    </div>
+
+    <div class="tech-card">
+        <h4>iFrames Used?</h4>
+        <p>
+            {% if metrics.get('iFrames Used')[0] == "Yes" %}
+                <i class="fas fa-check-circle success-icon"></i>
+            {% else %}
+                <i class="fas fa-times-circle error-icon"></i>
+            {% endif %}
+        </p>
+    </div>
+
+    <div class="tech-card">
+        <h4>Favicon</h4>
+        <p>
+            {% if metrics.get('Favicon Used')[0] == "Yes" %}
+                <i class="fas fa-check-circle success-icon"></i>
+            {% else %}
+                <i class="fas fa-times-circle error-icon"></i>
+            {% endif %}
+        </p>
+    </div>
+</div>
+
+
+<!-- Keyword Analysis Section -->
+<div class="keyword-analysis-section">
+    <h2 class="section-title">
+        <span class="title-decoration"></span>
+        Keyword Analysis
+    </h2>
+    
+    {% if keyword_analysis and not keyword_analysis.error %}
+    
+    <!-- Summary Stats - Mobile Friendly -->
+    <div class="keyword-stats-summary">
+        <div class="keyword-stat-item">
+            <div class="keyword-stat-icon">📊</div>
+            <div class="keyword-stat-content">
+                <div class="keyword-stat-number">{{ keyword_analysis.summary.total_keywords }}</div>
+                <div class="keyword-stat-label">Total Keywords</div>
+            </div>
+        </div>
+        
+        <div class="keyword-stat-item">
+            <div class="keyword-stat-icon">🎯</div>
+            <div class="keyword-stat-content">
+                <div class="keyword-stat-number">{{ keyword_analysis.summary.long_tail_keywords }}</div>
+                <div class="keyword-stat-label">Long-tail</div>
+            </div>
+        </div>
+        
+        <div class="keyword-stat-item">
+            <div class="keyword-stat-icon">📈</div>
+            <div class="keyword-stat-content">
+                <div class="keyword-stat-number">
+                    {% set avg_volume = keyword_analysis.summary.avg_search_volume %}
+                    {% if avg_volume is defined and avg_volume is not string %}
+                        {{ avg_volume|int|format_number }}
+                    {% elif avg_volume is string and avg_volume|float|default('invalid') != 'invalid' %}
+                        {{ avg_volume|float|format_number }}
+                    {% else %}
+                        {{ avg_volume }}
+                    {% endif %}
+                </div>
+                <div class="keyword-stat-label">Avg Volume</div>
+            </div>
+        </div>
+        
+        <div class="keyword-stat-item">
+            <div class="keyword-stat-icon">💰</div>
+            <div class="keyword-stat-content">
+                <div class="keyword-stat-number">
+                    {% set avg_cpc = keyword_analysis.summary.avg_cpc %}
+                    {% if avg_cpc is defined and avg_cpc is not string %}
+                        ${{ "%.2f"|format(avg_cpc) }}
+                    {% elif avg_cpc is string and avg_cpc|float|default('invalid') != 'invalid' %}
+                        ${{ "%.2f"|format(avg_cpc|float) }}
+                    {% else %}
+                        {{ avg_cpc }}
+                    {% endif %}
+                </div>
+                <div class="keyword-stat-label">Avg CPC</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Top Keywords Section -->
+    <div class="top-keywords-section">
+        <div class="section-header">
+            <h3 class="subsection-title">
+                <span class="subsection-icon">🏆</span>
+                Top Keywords
+            </h3>
+            <span class="keyword-count">{{ keyword_analysis.extracted_keywords|length }} found</span>
+        </div>
+        
+        <!-- Mobile Card View -->
+        <div class="keywords-mobile-view">
+            {% for kw in keyword_analysis.extracted_keywords %}
+            <div class="keyword-card">
+                <div class="keyword-header">
+                    <div class="keyword-type">
+                        {% if kw.type == 'single' %}
+                        <span class="type-badge single" title="Single keyword">S</span>
+                        {% elif kw.type == 'bigram' %}
+                        <span class="type-badge bigram" title="2-word keyword">2W</span>
+                        {% elif kw.type == 'trigram' %}
+                        <span class="type-badge trigram" title="3-word keyword">3W</span>
+                        {% else %}
+                        <span class="type-badge multi" title="Multi-word keyword">M</span>
+                        {% endif %}
+                    </div>
+                    <div class="keyword-text">
+                        <strong>{{ kw.keyword }}</strong>
+                        {% if kw.word_count > 3 %}
+                        <span class="long-tail-indicator">Long-tail</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="keyword-metrics">
+                    <div class="metric">
+                        <span class="metric-label">Volume:</span>
+                        <span class="metric-value">
+                            {% if kw.search_volume is defined %}
+                                {% if kw.search_volume is not string %}
+                                    {{ kw.search_volume|int|format_number }}
+                                {% elif kw.search_volume|float|default('invalid') != 'invalid' %}
+                                    {{ kw.search_volume|float|int|format_number }}
+                                {% else %}
+                                    {{ kw.search_volume }}
+                                {% endif %}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="metric">
+                        <span class="metric-label">CPC:</span>
+                        <span class="metric-value">
+                            {% if kw.cpc is defined %}
+                                {% if kw.cpc is not string %}
+                                    ${{ "%.2f"|format(kw.cpc) }}
+                                {% elif kw.cpc|float|default('invalid') != 'invalid' %}
+                                    ${{ "%.2f"|format(kw.cpc|float) }}
+                                {% else %}
+                                    {{ kw.cpc }}
+                                {% endif %}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="metric">
+                        <span class="metric-label">Competition:</span>
+                        <span class="competition-tag {{ kw.competition|lower|replace(' ', '-') }}">
+                            {{ kw.competition }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Desktop Table View (Hidden on Mobile) -->
+        <div class="keywords-desktop-view">
+            <div class="table-container">
+                <table class="keywords-table">
+                    <thead>
+                        <tr>
+                            <th class="col-type">Type</th>
+                            <th class="col-keyword">Keyword</th>
+                            <th class="col-volume">Volume</th>
+                            <th class="col-cpc">CPC</th>
+                            <th class="col-competition">Competition</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for kw in keyword_analysis.extracted_keywords %}
+                        <tr>
+                            <td class="col-type">
+                                {% if kw.type == 'single' %}
+                                <span class="table-type-badge single">S</span>
+                                {% elif kw.type == 'bigram' %}
+                                <span class="table-type-badge bigram">2W</span>
+                                {% elif kw.type == 'trigram' %}
+                                <span class="table-type-badge trigram">3W</span>
+                                {% else %}
+                                <span class="table-type-badge multi">M</span>
+                                {% endif %}
+                            </td>
+                            <td class="col-keyword">
+                                <div class="keyword-name">{{ kw.keyword }}</div>
+                                {% if kw.word_count > 3 %}
+                                <span class="table-long-tail">Long-tail</span>
+                                {% endif %}
+                            </td>
+                            <td class="col-volume">
+                                {% if kw.search_volume is defined %}
+                                    {% if kw.search_volume is not string %}
+                                        {{ kw.search_volume|int|format_number }}
+                                    {% elif kw.search_volume|float|default('invalid') != 'invalid' %}
+                                        {{ kw.search_volume|float|int|format_number }}
+                                    {% else %}
+                                        {{ kw.search_volume }}
+                                    {% endif %}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td class="col-cpc">
+                                {% if kw.cpc is defined %}
+                                    {% if kw.cpc is not string %}
+                                        ${{ "%.2f"|format(kw.cpc) }}
+                                    {% elif kw.cpc|float|default('invalid') != 'invalid' %}
+                                        ${{ "%.2f"|format(kw.cpc|float) }}
+                                    {% else %}
+                                        {{ kw.cpc }}
+                                    {% endif %}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td class="col-competition">
+                                <span class="table-competition {{ kw.competition|lower|replace(' ', '-') }}">
+                                    {{ kw.competition }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Suggested Keywords -->
+    <div class="suggested-keywords-section">
+        <div class="section-header">
+            <h3 class="subsection-title">
+                <span class="subsection-icon">💡</span>
+                Suggested Keywords
+            </h3>
+            <span class="keyword-count">{{ keyword_analysis.keyword_suggestions|length }} suggestions</span>
+        </div>
+        
+        <div class="suggestions-container">
+            {% for sug in keyword_analysis.keyword_suggestions %}
+            <div class="suggestion-item">
+                <div class="suggestion-rank">#{{ loop.index }}</div>
+                <div class="suggestion-details">
+                    <div class="suggestion-keyword">{{ sug.keyword }}</div>
+                    <div class="suggestion-stats">
+                        <div class="stat-pair">
+                            <span class="stat-icon-small">📈</span>
+                            <span class="stat-value">
+                                {% if sug.search_volume is defined %}
+                                    {% if sug.search_volume is not string %}
+                                        {{ sug.search_volume|int|format_number }}
+                                    {% elif sug.search_volume|float|default('invalid') != 'invalid' %}
+                                        {{ sug.search_volume|float|int|format_number }}
+                                    {% else %}
+                                        {{ sug.search_volume }}
+                                    {% endif %}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="stat-pair">
+                            <span class="stat-icon-small">💰</span>
+                            <span class="stat-value">
+                                {% if sug.cpc is defined %}
+                                    {% if sug.cpc is not string %}
+                                        ${{ "%.2f"|format(sug.cpc) }}
+                                    {% elif sug.cpc|float|default('invalid') != 'invalid' %}
+                                        ${{ "%.2f"|format(sug.cpc|float) }}
+                                    {% else %}
+                                        {{ sug.cpc }}
+                                    {% endif %}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="competition-indicator {{ sug.competition|lower|replace(' ', '-') }}">
+                            {{ sug.competition }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Long-tail Opportunities -->
+    <div class="longtail-opportunities-section">
+        <div class="section-header">
+            <h3 class="subsection-title">
+                <span class="subsection-icon">🎯</span>
+                Long-tail Opportunities
+            </h3>
+            {% set long_tail_keywords = keyword_analysis.keyword_suggestions|selectattr('stars')|list %}
+            <span class="keyword-count">{{ long_tail_keywords|length }} opportunities</span>
+        </div>
+        
+        <div class="opportunities-grid">
+            {% for opp in long_tail_keywords %}
+            <div class="opportunity-card">
+                <div class="opportunity-header">
+                    <span class="opportunity-rank">{{ loop.index }}</span>
+                    <span class="opportunity-keyword">{{ opp.keyword }}</span>
+                </div>
+                
+                <div class="opportunity-stars">
+                    {% if opp.stars is defined and opp.stars is not none %}
+                        {% if opp.stars is not string %}
+                            {% for i in range(5) %}
+                                {% if i < opp.stars|int %}
+                                <span class="star active">★</span>
+                                {% else %}
+                                <span class="star">☆</span>
+                                {% endif %}
+                            {% endfor %}
+                        {% elif opp.stars|float|default('invalid') != 'invalid' %}
+                            {% set star_count = opp.stars|float|int %}
+                            {% for i in range(5) %}
+                                {% if i < star_count %}
+                                <span class="star active">★</span>
+                                {% else %}
+                                <span class="star">☆</span>
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <span class="star-text">{{ opp.stars }}</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="star-text">N/A</span>
+                    {% endif %}
+                </div>
+                
+                <div class="opportunity-metrics">
+                    <div class="metric-row">
+                        <span class="metric-label">Volume:</span>
+                        <span class="metric-value">
+                            {% if opp.search_volume is defined %}
+                                {% if opp.search_volume is not string %}
+                                    {{ opp.search_volume|int|format_number }}
+                                {% elif opp.search_volume|float|default('invalid') != 'invalid' %}
+                                    {{ opp.search_volume|float|int|format_number }}
+                                {% else %}
+                                    {{ opp.search_volume }}
+                                {% endif %}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">CPC:</span>
+                        <span class="metric-value">
+                            {% if opp.cpc is defined %}
+                                {% if opp.cpc is not string %}
+                                    ${{ "%.2f"|format(opp.cpc) }}
+                                {% elif opp.cpc|float|default('invalid') != 'invalid' %}
+                                    ${{ "%.2f"|format(opp.cpc|float) }}
+                                {% else %}
+                                    {{ opp.cpc }}
+                                {% endif %}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    {% else %}
+    <div class="no-keyword-data">
+        <div class="no-data-icon">🔍</div>
+        <h4>No Keyword Data Available</h4>
+        <p>We couldn't analyze keywords for this URL. This might be because:</p>
+        <ul>
+            <li>The page doesn't have enough content</li>
+            <li>The page is blocked from analysis</li>
+            <li>There was an error during keyword extraction</li>
+        </ul>
+        {% if keyword_analysis and keyword_analysis.error %}
+        <div class="error-notice">
+            <strong>Technical Details:</strong> {{ keyword_analysis.error }}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+
+
+
+        <!-- Wrapper for both Desktop and Mobile Metrics -->
+        <div class="metrics-horizontal-wrapper">
+            <!-- Desktop Metrics -->
+            <div class="metrics-card">
+                
+                <h2 class="section-title">
+        <span class="title-decoration"></span>
+        PageSpeed Desktop
+    </h2>
+                <div class="metrics-grid">
+                    <div>
+                        <strong>Performance Score</strong><br>
+                        <span class="performance-score">{{ metrics["Performance Score (Desktop)"][0] }}</span>
+                    </div>
+                    <div>
+                        <strong>First Contentful Paint</strong><br>
+                        <span class="performance-metric" data-metric="First Contentful Paint">
+                            {{ metrics["First Contentful Paint (Desktop)"][0] }} 
+                        </span>
+                    </div>
+                    <div>
+                        <strong>Speed Index</strong><br>
+                        <span class="performance-metric" data-metric="Speed Index">
+                            {{ metrics["Speed Index (Desktop)"][0] }} 
+                        </span>
+                    </div>
+                    <div>
+                        <strong>Largest Contentful Paint</strong><br>
+                        <span class="performance-metric" data-metric="Largest Contentful Paint">
+                            {{ metrics["LCP Lighthouse (Desktop)"][0] }} 
+                        </span>
+                    </div>
+                    <div>
+                        <strong>Time to Interactive</strong><br>
+                        <span class="performance-metric" data-metric="Time to Interactive">
+                            {{ metrics["Time to Interactive (Desktop)"][0] }} 
+                        </span>
+                    </div>
+                    <div>
+                        <strong>Cumulative Layout Shift</strong><br>
+                        <span class="performance-metric" data-metric="Cumulative Layout Shift">
+                            {{ metrics["CLS Lighthouse (Desktop)"][0] }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Metrics -->
+            <div class="metrics-card">
+                
+                <h2 class="section-title">
+        <span class="title-decoration"></span>
+        PageSpeed Mobile
+    </h2>
+                <div class="metrics-grid">
+                    <div>
+                        <strong>Performance Score</strong><br>
+                        <span class="performance-score">{{ metrics["Performance Score (Mobile)"][0] }}</span>
+                    </div>
+                    <div>
+                        <strong>First Contentful Paint</strong><br>
+                        <span class="performance-metric" data-metric="First Contentful Paint">
+                            {{ metrics["First Contentful Paint (Mobile)"][0] }} 
+                        </span>
+                    </div>
+                    <div>
+                        <strong>Speed Index</strong><br>
+                        <span class="performance-metric" data-metric="Speed Index">
+                            {{ metrics["Speed Index (Mobile)"][0] }} 
+                        </span>
+                    </div>
+                    <div>
+                        <strong>Time to Interactive</strong><br>
+                        <span class="performance-metric" data-metric="Time to Interactive">
+                            {{ metrics["Time to Interactive (Mobile)"][0] }} 
+                        </span>
+                    </div>
+                    <div>
+                        <strong>CLS Lighthouse</strong><br>
+                        <span class="performance-metric" data-metric="Cumulative Layout Shift">
+                            {{ metrics["CLS Lighthouse (Mobile)"][0] }}
+                        </span>
+                    </div>
+                    <div>
+                        <strong>LCP Lighthouse</strong><br>
+                        <span class="performance-metric" data-metric="Largest Contentful Paint">
+                            {{ metrics["LCP Lighthouse (Mobile)"][0] }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div> 
+</div>
+</div>
+
+<div class="performance-metrics-section" style="width: 100%; margin: 40px 0; background: linear-gradient(135deg, #f8f9fa 0%, #eef2f5 100%); padding: 30px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); font-family: 'Segoe UI', Roboto, sans-serif;">
+    <h2 style="margin-bottom: 25px; color: #2c3e50; font-weight: 600; font-size: 28px; display: flex; align-items: center;">
+        <span style="display: inline-block; width: 8px; height: 30px; background: linear-gradient(to bottom, #e91e63, #9c27b0); margin-right: 12px; border-radius: 4px;"></span>
+        On-Page Metrics
+    </h2>
+        <!-- Metadata, Content, Images, Links, Structured Data -->
+        <div class="met-grid">
+            
+            <div class="metric-section">
+                <h3>Meta Data</h3>
+                <!--<p><strong>Meta Title:</strong> {{ metrics["Meta Title"][0] }}</p>
+                <p><strong>Meta Description:</strong> {{ metrics["Meta Description"][0] }}</p>-->
+                 <p><strong>Meta Title:</strong> 
+        {% if metrics and metrics.get("Meta Title") and metrics["Meta Title"][0] is defined %}
+            {% set title = metrics["Meta Title"][0] %}
+            {% set title_length = metrics["Meta Title Character Count"][0] if metrics.get("Meta Title Character Count") else 0 %}
+            
+            {% if title == "N/A" or title == "" %}
+                <span style="color: #d32f2f;">✗ Missing</span>
+            {% else %}
+                <span style="color: #ffffff;">"{{ title[:60] }}{% if title|length > 60 %}...{% endif %}"</span><br>
+                <small>
+                    <strong>Length:</strong> {{ title_length }} characters 
+                    <span style="color: {% if title_length >= 50 and title_length <= 60 %}#388e3c{% elif title_length >= 40 and title_length <= 70 %}#ff9800{% else %}#d32f2f{% endif %};">
+                        ({% if title_length < 40 %}Too short{% elif title_length > 70 %}Too long{% else %}Optimal{% endif %})
+                    </span>
+                </small>
+            {% endif %}
+        {% else %}
+            <span style="color: #ffffff;">Not available</span>
+        {% endif %}
+    </p>
+    
+    <p><strong>Meta Description:</strong> 
+        {% if metrics and metrics.get("Meta Description") and metrics["Meta Description"][0] is defined %}
+            {% set description = metrics["Meta Description"][0] %}
+            {% set desc_length = metrics["Meta Description Character Count"][0] if metrics.get("Meta Description Character Count") else 0 %}
+            
+            {% if description == "N/A" or description == "" %}
+                <span style="color: #d32f2f;">✗ Missing</span>
+            {% else %}
+                <span style="color: #ffffff;">"{{ description[:120] }}{% if description|length > 120 %}...{% endif %}"</span><br>
+                <small>
+                    <strong>Length:</strong> {{ desc_length }} characters 
+                    <span style="color: {% if desc_length >= 120 and desc_length <= 160 %}#388e3c{% elif desc_length >= 100 and desc_length <= 200 %}#ff9800{% else %}#d32f2f{% endif %};">
+                        ({% if desc_length < 100 %}Too short{% elif desc_length > 200 %}Too long{% else %}Optimal{% endif %})
+                    </span>
+                </small>
+            {% endif %}
+        {% else %}
+            <span style="color: #ffffff;">Not available</span>
+        {% endif %}
+    </p>
+                <p><strong>Canonical Tag:</strong> {{ metrics["Canonical Tag"][0] }}</p>
+            </div>
+
+            <div class="metric-section">
+                <h3>Content Analysis</h3>
+                <p><strong>Word Count:</strong> {{ metrics["Word Count"][0] }}</p>
+                <p><strong>Structured Data:</strong> {{ metrics["Structured Data"][0] }}</p>
+                <p><strong>H1 Tags:</strong> {{ metrics["H1 Tags"][0] }}</p>
+                <p><strong>H2 Tags:</strong> {{ metrics["H2 Tags"][0] }}</p>
+            </div>
+
+            <div class="metric-section">
+                <h3>Image Details</h3>
+                <p><strong>Total Images:</strong> {{ metrics.get("Total Images", ["N/A"])[0] }}</p>
+                <p><strong>Images Without Alt:</strong> {{ metrics["Images Without Alt"][0] }}
+        {% if metrics["Images Without Alt"][0] > 0 %}
+            
+        {% endif %}
+    </p>
+                <p><strong>Largest Image Name:</strong> {{ metrics["Largest Image Name"][0] }}</p>
+                <p><strong>Largest Image Size (KB):</strong> {{ metrics["Largest Image Size (KB)"][0] }}</p>
+                 <p><strong>Responsive Image Issues:</strong> 
+    {% if metrics %}
+        {% set issue_count = None %}
+        
+        {# Check for the count in metrics - note the exact key name #}
+        {% if metrics.get("Responsive Image Issues") and metrics["Responsive Image Issues"][0] is defined %}
+            {% set issue_count = metrics["Responsive Image Issues"][0] %}
+        {% endif %}
+        
+        {% if issue_count is not none %}
+            {% if issue_count > 0 %}
+                <span>{{ issue_count }} issues found</span>
+                
+                {# Check if we have the details in the template variable #}
+                {% if responsive_image_issues_details %}
+                    <button type="button" onclick="toggleDetails('responsiveDetails')" 
+                            style="margin-left: 10px; padding: 2px 10px; font-size: 12px; 
+                                   background: #01f5e1; color: rgb(0, 0, 0); border: none; border-radius: 3px; 
+                                   cursor: pointer;">
+                        Show Details
+                    </button>
+                    
+                    <div id="responsiveDetails" style="display: none; margin-top: 10px; padding: 10px; 
+                         background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px;">
+                        {% if responsive_image_issues_details|length > 0 %}
+                            {% for issue in responsive_image_issues_details %}
+                                {% if issue is mapping %}
+                                <div style="margin-bottom: 10px; padding: 8px; background: white; border-radius: 3px;">
+                                    <div><strong>Image:</strong> {{ issue.get('image', 'Unknown image') }}</div>
+                                    <div><strong>Alt Text:</strong> {{ issue.get('alt', 'No alt text') }}</div>
+                                    <div><strong>Issues:</strong>
+                                        <ul style="margin: 5px 0 0 20px;">
+                                            {% for problem in issue.get('issues', []) %}
+                                            <li>{{ problem }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div>Issue: {{ issue }}</div>
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <div>No detailed information available.</div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% else %}
+                <span style="color: #388e3c;">✓ No responsive image issues found</span>
+            {% endif %}
+        {% else %}
+            <span style="color: #757575;">Not checked</span>
+        {% endif %}
+    {% else %}
+        <span style="color: #757575;">Not checked</span>
+    {% endif %}
+</p>
+
+<script>
+function toggleDetails(id) {
+    var elem = document.getElementById(id);
+    var button = event.target;
+    if (elem.style.display === 'none') {
+        elem.style.display = 'block';
+        button.textContent = 'Hide Details';
+    } else {
+        elem.style.display = 'none';
+        button.textContent = 'Show Details';
+    }
+}
+</script>
+                
+            </div>
+
+            <div class="metric-section">
+                <h3>Links & Indexibility</h3>
+                <p><strong>Indexability:</strong> {{ metrics["Indexability"][0] }}</p>
+                <p><strong>Response Code:</strong> {{ metrics["Response Code"][0] }}</p>
+                <p><strong>Internal Links:</strong> {{ metrics["Internal Links"][0] }}</p>
+                <p><strong>External Links:</strong> {{ metrics["External Links"][0] }}</p>
+                <p><strong>Broken Links:</strong> {{ metrics["Broken Links"][0] }}</p>
+            </div>
+            <div class="metric-section">
+    <h3>Tags</h3>
+    
+   
+  <p><strong>Google Analytics:</strong> {{ metrics.get("GA4 (gtag.js)", ["N/A"])[0] }}</p>
+    <p><strong>Universal Analytics:</strong> {{ metrics.get("Universal Analytics (analytics.js)", ["N/A"])[0] }}</p>
+    <p><strong>Google Tag Manager (GTM):</strong> {{ metrics.get("Google Tag Manager (GTM)", ["N/A"])[0] }}</p>
+    <p><strong>Disallowed Paths:</strong> <span style="font-family: monospace; padding: 2px 6px; border-radius: 4px; border: 1px solid #bfdbfe;">{{ metrics["Disallowed Paths"][0] |replace(", ", "|") }}</span></p>
+    <p><strong>Hreflang Tags:</strong> 
+    {% if hreflang_tags and hreflang_tags|length > 0 %}
+        <span>{{ hreflang_tags|length }} tag{% if hreflang_tags|length > 1 %}s{% endif %} found</span>
+    {% else %}
+        <span>No tags found</span>
+    {% endif %}
+</p>
+<p><strong>Schema Types:</strong> 
+    {% if metrics.get('Schema Types')[0] and metrics.get('Schema Types')[0] != "None" and metrics.get('Schema Types')[0] != "" %}
+        {{ metrics.get('Schema Types')[0] }}
+    {% else %}
+        No Schema Found
+    {% endif %}
+</p>
+    
+    </div>
+     <div class="metric-section">
+        <h3>Site Configuration</h3>
+    <p><strong>SSL Enabled:</strong> {{ metrics["SSL Enabled"][0] }}</p>
+    <p><strong>SSL Expiry Date:</strong> {{ metrics["SSL Expiry Date"][0] }}
+        {% if ssl_info.days_remaining != "N/A" %}
+            ({{ ssl_info.days_remaining }} days remaining)
+        {% endif %}
+    </p>
+    <p><strong>Robots.txt:</strong> 
+        {% if metrics["Robots.txt"][0] != "Not found" %}
+            {{ metrics['Robots.txt'][0] }}
+        {% else %}
+            Not found
+        {% endif %}
+    </p>
+    
+    <p><strong>Sitemap.xml:</strong> 
+        {% if metrics["Sitemap.xml"][0] != "Not found" %}
+            {{ metrics['Sitemap.xml'][0] }}
+        {% else %}
+            Not found
+        {% endif %}
+    </p>
+    <p><strong>JS/Console Errors:</strong> 
+    {% if metrics and metrics.get("JS Errors") and metrics["JS Errors"][0] is defined %}
+        {{ metrics["JS Errors"][0] }} errors found
+    {% else %}
+        Not checked
+    {% endif %}
+</p>
+<p><strong>Charset:</strong> 
+    {% if metrics and metrics.get("Charset") and metrics["Charset"][0] is defined %}
+        {{ metrics["Charset"][0] }}
+    {% else %}
+        Not checked
+    {% endif %}
+</p>
+<p><strong>Charset Declared:</strong> 
+    {% if metrics and metrics.get("Charset Declared") and metrics["Charset Declared"][0] is defined %}
+        {{ metrics["Charset Declared"][0] }}
+    {% else %}
+        Not checked
+    {% endif %}
+</p>
+  
+</div>
+            </div>
+</div>
+
+
+        <div class="google-algo-update">
+                <h2 class="section-title">
+        <span class="title-decoration"></span>
+        Latest Google Algorithm
+    </h2>
+                <div class="update-details"></div>
+                {% if latest_update %}
+                <p class="update-name">{{ latest_update.title }}</p>
+                <p class="update-description">{{ latest_update.summary }}</p>
+                <div class="update-summary">
+                <div class="update-meta">
+            <span class="published-date">Published: {{ latest_update.published }}</span>
+            <p>For More details visit : <a href="{{ latest_update.link }}" class="official-link" target="_blank">Official Website</a></p>
+        </div>
+                {% else %}
+                <div>No recent algorithm update found.</div>
+                {% endif %}
+            </div>
+            <div class="report-footer">
+        Report generated by MAGNUSTIC
+    </div>
+    </div>
+</div>
+</div>
+</section>
+
+
+
+    </div>
+</div>
+{% endif %}
+
+    {% if metrics %}
+<script>
+window.onload = function () {
+    const modal = document.getElementById("analysisModal");
+    const closeBtn = document.querySelector(".close-btn");
+
+    if (modal) {
+        modal.style.display = "block";
+
+        closeBtn.onclick = function () {
+            modal.style.display = "none";
+        };
+
+        window.onclick = function (event) {
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
+        };
+    }
+};
+</script>
+{% endif %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const form = document.querySelector("form");
+    const analyzeButton = form.querySelector("button[type='submit']");
+
+    form.addEventListener("submit", function() {
+        analyzeButton.disabled = true;
+        analyzeButton.textContent = "Analyzing... Great things take time ✨";
+        analyzeButton.className = "index-btn phase-1";
+
+        // After 30 seconds
+        setTimeout(() => {
+            analyzeButton.textContent = "Perfection is brewing... stay tuned ☕";
+            analyzeButton.className = "index-btn phase-2";
+        }, 30000);
+
+        // After 60 seconds
+        setTimeout(() => {
+            analyzeButton.textContent = "Don’t go anywhere, magic is happening 🔮";
+            analyzeButton.className = "index-btn phase-3";
+        }, 60000);
+
+        // After 90 seconds
+        setTimeout(() => {
+            analyzeButton.textContent = "May be The result is too great to load";
+            analyzeButton.className = "index-btn phase-4";
+        }, 90000);
+
+        // After 120 seconds
+        setTimeout(() => {
+            analyzeButton.textContent = "Your SEO treasure is almost ready 💎";
+            analyzeButton.className = "index-btn phase-5";
+        }, 120000);
+    });
+});
+</script>
+
+</section>
+ <!-- Features Section --
+<section class="features">
+    <div class="container">
+        <h2>What You Will Discover</h2>
+        <div class="feature-list">
+            <div class="feature-item">
+                <h3>Page Analysis</h3>
+                <ul>
+                    <li>Meta title and description evaluation</li>
+                    <li>Heading structure (H1, H2 tags)</li>
+                    <li>Content quality and word count</li>
+                    <li>Image optimization analysis</li>
+                </ul>
+            </div>
+            <div class="feature-item">
+                <h3>Technical SEO Audit</h3>
+                <ul>
+                    <li>Canonical tag implementation</li>
+                    <li>Structured data markup</li>
+                    <li>Internal/external link analysis</li>
+                    <li>Broken link detection</li>
+                </ul>
+            </div>
+            <div class="feature-item">
+                <h3>Performance Metrics</h3>
+                <ul>
+                    <li>Google PageSpeed scores</li>
+                    <li>Core Web Vitals (LCP, CLS, FID)</li>
+                    <li>Mobile vs. desktop performance</li>
+                    <li>Render-blocking resources</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="full-website-cta">
+    <div class="container">
+        <div class="cta-content">
+            <h2>Want More Updates Regarding SEO</h2>
+            <p>Read Our Blogs That Will Help you to Get Complete Information About The SEO</p>
+            <div class="cta-buttons">
+                <a href="https://magnustic.com/blog/" class="cta-button primary">Go To Blogs</a>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- SEO Description Section with Image --
+<section class="seo-description">
+    <div class="container">
+        <h2>Why SEO Audit?</h2>
+        <div class="seo-content-wrapper">
+            <div class="seo-image">
+                <img src="/static/assets/images/seoapp_front.jpg" loading="lazy" alt="SEO Analysis Illustration">
+            </div>
+            <div class="seo-content">
+                <p>A powerful <strong>SEO Analyzer</strong> is essential for improving website speed, technical health, and overall search engine performance. Our tool scans your website and provides in-depth insights into key technical SEO metrics, including <strong>page speed</strong>, <strong>mobile-friendliness</strong>, <strong>Core Web Vitals</strong>, <strong>crawlability</strong>, and <strong>indexing issues</strong>.</p>
+                
+                <p>The tool also checks for <strong>broken links</strong>, <strong>missing meta tags</strong>, <strong>structured data issues</strong>, and <strong>duplicate content</strong>, ensuring your site meets search engine guidelines.</p>
+                
+                <p>Get <strong>actionable recommendations</strong> to fix performance bottlenecks and optimize your website for higher rankings and better conversions.</p>
+                
+                <p>Stay ahead in search rankings by using our <strong>SEO Analyzer</strong> to ensure a fast, error-free, and technically sound website!</p>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Full Website CTA --
+<section class="full-website-cta">
+    <div class="container">
+        <div class="cta-content">
+            <h2>Ready for Full Website Analysis?</h2>
+            <p>Our full website analysis scans your entire site, including all pages, providing comprehensive reports and actionable insights.</p>
+            <div class="cta-buttons">
+                <a href="{{ url_for('login') }}" class="cta-button primary">Log In to Analyze Full Site</a>
+                <a href="{{ url_for('register') }}" class="cta-button secondary">Create Free Account</a>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Value Proposition Section --
+<section class="value-props">
+    <div class="container">
+        <h2>Why Analyze Your Website?</h2>
+        <div class="value-grid">
+            <div class="value-card">
+                <div class="value-icon">🚀</div>
+                <h3>Performance Insights</h3>
+                <p>Discover how fast your pages load on both desktop and mobile devices, with actionable recommendations.</p>
+            </div>
+            <div class="value-card">
+                <div class="value-icon">🔍</div>
+                <h3>SEO Health Check</h3>
+                <p>Get detailed reports on meta tags, headings, content structure and technical SEO factors.</p>
+            </div>
+            <div class="value-card">
+                <div class="value-icon">📈</div>
+                <h3>Competitive Edge</h3>
+                <p>Identify opportunities to outperform competitors in search rankings.</p>
+            </div>
+        </div>
+    </div>-->
+    
+
+    <script>
+// Performance metric thresholds (Google Lighthouse standards)
+const performanceThresholds = {
+    'Performance Score': { good: 90, poor: 50 }, // Higher is better
+    'First Contentful Paint': { good: 1.8, poor: 3.0 }, // Seconds (lower better)
+    'Speed Index': { good: 3.4, poor: 5.8 }, // Seconds (lower better)
+    'Largest Contentful Paint': { good: 2.5, poor: 4.0 }, // Seconds (lower better)
+    'Time to Interactive': { good: 3.8, poor: 7.3 }, // Seconds (lower better)
+    'Cumulative Layout Shift': { good: 0.1, poor: 0.25 } // (lower better)
+};
+
+// Get color for performance metrics
+function getPerformanceColor(metricName, value) {
+    const numValue = parseFloat(value);
+    if (isNaN(numValue)) return null;
+    
+    const metricKey = Object.keys(performanceThresholds).find(key => 
+        metricName.includes(key) || key.includes(metricName)
+    );
+    
+    if (!metricKey) return null;
+    
+    const { good, poor } = performanceThresholds[metricKey];
+    
+    // Performance score is special (higher is better)
+    if (metricKey === 'Performance Score') {
+        if (numValue >= good) return '#0CCE6B'; // Green
+        if (numValue >= poor) return '#FFA400'; // Orange
+        return '#FF4E42'; // Red
+    }
+    
+    // All other performance metrics (lower is better)
+    if (numValue <= good) return '#0CCE6B'; // Green
+    if (numValue <= poor) return '#FFA400'; // Orange
+    return '#FF4E42'; // Red
+}
+
+// Style performance metrics
+function stylePerformanceMetrics() {
+    // 1. Style all performance metric values
+    document.querySelectorAll('.performance-metric').forEach(el => {
+        const metricName = el.getAttribute('data-metric');
+        const value = el.textContent.trim().replace(' s', '').replace(' ms', '');
+        
+        const color = getPerformanceColor(metricName, value);
+        if (color) {
+            el.style.color = color;
+            el.style.fontWeight = 'bold';
+            
+            // Clean up duplicate units
+            if (el.textContent.includes(' s s')) {
+                el.textContent = el.textContent.replace(' s s', ' s');
+            }
+        }
+    });
+
+    // 2. Style performance score circles
+    document.querySelectorAll('.performance-score').forEach(el => {
+        const score = parseFloat(el.textContent);
+        if (!isNaN(score)) {
+            if (score >= 90) {
+                el.style.backgroundColor = '#0CCE6B';
+                el.style.color = '#ffffff';
+            } else if (score >= 50) {
+                el.style.backgroundColor = '#FFA400';
+                el.style.color = '#000000';
+            } else {
+                el.style.backgroundColor = '#FF4E42';
+                el.style.color = '#ffffff';
+            }
+        }
+    });
+}
+
+// Run when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    stylePerformanceMetrics();
+    
+    // Also run when modal opens (if you're using one)
+    const modal = document.getElementById('analysisModal');
+    if (modal) {
+        new MutationObserver(() => {
+            if (modal.style.display === 'block') {
+                stylePerformanceMetrics();
+            }
+        }).observe(modal, { attributes: true });
+    }
+});
+</script>
+<script>
+{% if from_post and results_param %}
+    // Add results parameter to URL
+    if (window.history.replaceState) {
+        const newUrl = window.location.pathname + '?results=true';
+        window.history.replaceState(null, null, newUrl);
+    }
+    
+    // Check on page load if this is a refresh
+    window.addEventListener('beforeunload', function() {
+        localStorage.setItem('wasOnResultsPage', 'true');
+    });
+    
+    window.onload = function() {
+        if (localStorage.getItem('wasOnResultsPage') === 'true') {
+            localStorage.removeItem('wasOnResultsPage');
+            // This is a refresh - redirect to clean page
+            window.location.href = "{{ url_for('analyze_single_url') }}";
+        }
+    };
+{% endif %}
+</script>
+<script>
+// Simple fix for session expiry - check every minute
+setInterval(function() {
+    fetch('/check-session', { 
+        method: 'GET',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(response => {
+        if (response.status === 401) {
+            // Session expired - redirect to login
+            window.location.href = '/login';
+        }
+    })
+    .catch(() => {
+        // If fetch fails, assume session expired and redirect
+        window.location.href = '/login';
+    });
+}, 60000); // Check every minute
+
+// Also check when page becomes visible again (user returns to tab)
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) {
+        fetch('/check-session')
+        .then(response => {
+            if (response.status === 401) {
+                window.location.href = '/login';
+            }
+        })
+        .catch(() => {
+            window.location.href = '/login';
+        });
+    }
+});
+</script>
+</section>
+
+
+</body>
+</html>

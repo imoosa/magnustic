@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selected URLs Analysis Results - Magnustic</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/style.css') }}">
+    <style>
+        .results-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 0;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .grade-display {
+            font-size: 72px;
+            font-weight: bold;
+            line-height: 1;
+        }
+        
+        .grade-a { color: #28a745; }
+        .grade-b { color: #ffc107; }
+        .grade-c { color: #fd7e14; }
+        .grade-d { color: #dc3545; }
+        .grade-e { color: #6c757d; }
+        
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            height: 100%;
+        }
+        
+        .stat-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+        
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            display: block;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .metric-row {
+            margin-bottom: 15px;
+        }
+        
+        .metric-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .metric-value {
+            font-weight: 500;
+            color: #212529;
+        }
+        
+        .issue-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .issue-critical { background: #f8d7da; color: #721c24; }
+        .issue-warning { background: #fff3cd; color: #856404; }
+        .issue-info { background: #d1ecf1; color: #0c5460; }
+        
+        .back-button {
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="results-header text-center">
+            <div class="container">
+                <h1 class="mb-3">
+                    <i class="bi bi-list-check"></i> Selected URLs Analysis Results
+                </h1>
+                <p class="lead mb-4">
+                    Analysis completed on {{ analysis.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                </p>
+                
+                <div class="row justify-content-center">
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon text-primary">
+                                <i class="bi bi-link"></i>
+                            </div>
+                            <span class="stat-number">{{ urls_analyzed }}</span>
+                            <span class="stat-label">URLs Analyzed</span>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon text-success">
+                                <i class="bi bi-award"></i>
+                            </div>
+                            <div class="grade-display grade-{{ grade|lower }}">{{ grade }}</div>
+                            <span class="stat-label">Overall Grade</span>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon text-info">
+                                <i class="bi bi-speedometer2"></i>
+                            </div>
+                            <span class="stat-number">{{ avg_desktop }}</span>
+                            <span class="stat-label">Avg Desktop Score</span>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon text-warning">
+                                <i class="bi bi-phone"></i>
+                            </div>
+                            <span class="stat-number">{{ avg_mobile }}</span>
+                            <span class="stat-label">Avg Mobile Score</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="container">
+            <!-- Website Info -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-globe"></i> Website Information
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 metric-row">
+                                    <div class="metric-label">Website Name</div>
+                                    <div class="metric-value">{{ analysis.website_name }}</div>
+                                </div>
+                                <div class="col-md-6 metric-row">
+                                    <div class="metric-label">Analyzed URL</div>
+                                    <div class="metric-value">
+                                        <a href="{{ analysis.url }}" target="_blank">{{ analysis.url }}</a>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 metric-row">
+                                    <div class="metric-label">Analysis Date</div>
+                                    <div class="metric-value">{{ analysis.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                                </div>
+                                <div class="col-md-6 metric-row">
+                                    <div class="metric-label">Job ID</div>
+                                    <div class="metric-value">{{ job.id }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-download"></i> Download Report
+                            </h5>
+                        </div>
+                        <div class="card-body text-center">
+                            <p class="mb-4">Download the complete analysis report in Excel format</p>
+                            <a href="{{ url_for('download', analysis_id=analysis.id) }}" 
+                               class="btn btn-primary btn-lg btn-block">
+                                <i class="bi bi-file-earmark-excel"></i> Download Excel Report
+                            </a>
+                            <a href="{{ url_for('dashboard', username=current_user.email) }}" 
+                               class="btn btn-outline-secondary btn-block mt-2">
+                                <i class="bi bi-arrow-left"></i> Back to Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Performance Summary -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-speedometer"></i> Performance Summary
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-6 metric-row">
+                                    <div class="metric-label">Desktop Performance</div>
+                                    <div class="metric-value">{{ avg_desktop }}/100</div>
+                                </div>
+                                <div class="col-6 metric-row">
+                                    <div class="metric-label">Mobile Performance</div>
+                                    <div class="metric-value">{{ avg_mobile }}/100</div>
+                                </div>
+                                {% if moz_metrics %}
+                                <div class="col-6 metric-row">
+                                    <div class="metric-label">Domain Authority</div>
+                                    <div class="metric-value">{{ moz_metrics.get('Domain Authority', 'N/A') }}</div>
+                                </div>
+                                <div class="col-6 metric-row">
+                                    <div class="metric-label">Page Authority</div>
+                                    <div class="metric-value">{{ moz_metrics.get('Page Authority', 'N/A') }}</div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-exclamation-triangle"></i> Issues Found
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if missing_titles > 0 %}
+                            <div class="mb-2">
+                                <span class="issue-badge issue-critical">Critical</span>
+                                Missing meta titles on {{ missing_titles }} pages
+                            </div>
+                            {% endif %}
+                            
+                            {% if missing_descriptions > 0 %}
+                            <div class="mb-2">
+                                <span class="issue-badge issue-warning">Warning</span>
+                                Missing meta descriptions on {{ missing_descriptions }} pages
+                            </div>
+                            {% endif %}
+                            
+                            {% if avg_desktop < 90 %}
+                            <div class="mb-2">
+                                <span class="issue-badge issue-info">Info</span>
+                                Desktop performance needs improvement
+                            </div>
+                            {% endif %}
+                            
+                            {% if avg_mobile < 90 %}
+                            <div class="mb-2">
+                                <span class="issue-badge issue-info">Info</span>
+                                Mobile performance needs improvement
+                            </div>
+                            {% endif %}
+                            
+                            {% if not missing_titles and not missing_descriptions and avg_desktop >= 90 and avg_mobile >= 90 %}
+                            <div class="text-center text-success">
+                                <i class="bi bi-check-circle-fill" style="font-size: 48px;"></i>
+                                <p class="mt-2">No critical issues found!</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="row">
+                <div class="col-12 text-center back-button">
+                    <a href="{{ url_for('dashboard', username=current_user.email) }}" 
+                       class="btn btn-secondary mr-2">
+                        <i class="bi bi-arrow-left"></i> Back to Dashboard
+                    </a>
+                    <a href="{{ url_for('analyze_single_url') }}" 
+                       class="btn btn-outline-primary mr-2">
+                        <i class="bi bi-house"></i> Analyze Single URL
+                    </a>
+                    <a href="{{ url_for('analyze_with_selection') }}" 
+                       class="btn btn-primary">
+                        <i class="bi bi-list-check"></i> Analyze More URLs
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Auto-dismiss success messages after 5 seconds
+        setTimeout(function() {
+            $('.alert-success').fadeOut('slow');
+        }, 5000);
+    </script>
+</body>
+</html>

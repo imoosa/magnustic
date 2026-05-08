@@ -1,0 +1,186 @@
+style="padding-top: 15px; background: transparent;"
+style="border-radius:10px; padding:15px; background: transparent; border:1px solid #ff4d4d;"
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Magnustic</title>
+  <meta content="" name="description">
+  <meta content="" name="keywords">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <link rel="icon" href="{{ url_for('static', filename='assets/images/favicon.png') }}" type="image/png">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/style.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <link href="https://fonts.cdnfonts.com/css/georgia" rel="stylesheet">
+  
+  {% block extra_css %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+
+  <!-- Dashboard Grid Layout (now in base) -->
+  <div class="dashboard-grid">
+    
+    <!-- LEFT SIDEBAR - Shared across all authenticated pages -->
+    <aside class="dashboard-sidebar">
+      <div class="dashboard-logo">
+        <img src="{{ url_for('static', filename='assets/images/magnustic-logo.png') }}" alt="Logo" width="300" height="76" class="img-fluid navbar-logo">
+      </div>
+      
+      <nav class="sidebar-nav">
+        <ul>
+          <li data-tab="dashboard">
+            <a href="{{ url_for('dashboard', username=current_user.email) }}">
+        <i class="bi bi-speedometer2"></i>
+        <span>Dashboard</span>
+          </a>
+    </li>
+    <li data-tab="single-url" onclick="goToSingleUrl()">
+    <a href="{{ url_for('analyze_single_url') }}">
+        <i class="bi bi-house"></i>
+        <span>Single Url Analysis</span>
+    </a>
+</li>
+          <!--<li data-tab="single-url">
+    <a href="{{ url_for('analyze_single_url') }}">
+        <i class="bi bi-house"></i>
+        <span>Single Url Analysis</span>
+    </a>
+</li>--
+          <li data-tab="analysis-history">
+            <a href="{{ url_for('dashboard', username=current_user.email) }}#analysis-history-section">
+              <i class="bi bi-list-check"></i>
+              <span>Analysis History</span>
+            </a>
+          </li>
+          <li data-tab="plan-details">
+            <a href="{{ url_for('dashboard', username=current_user.email) }}#plan-details-section">
+              <i class="bi bi-gem"></i>
+              <span>Plan Details</span>
+            </a>
+          </li>
+          <li data-tab="performance">
+            <a href="{{ url_for('dashboard', username=current_user.email) }}#performance-section">
+              <i class="bi bi-graph-up"></i>
+              <span>Performance</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+      <script>
+function goToSingleUrl() {
+    window.location.href = "{{ url_for('analyze_single_url') }}";
+}
+</script>
+<script>
+  <script>
+// Sidebar navigation active state management
+document.addEventListener('DOMContentLoaded', function() {
+  const navLinks = document.querySelectorAll('.sidebar-nav li');
+  
+  function setActiveNavItem() {
+    const currentPath = window.location.pathname;
+    const currentHash = window.location.hash;
+    
+    // Remove active class from all nav items
+    navLinks.forEach(link => {
+      link.classList.remove('active');
+    });
+    
+    // Check for Single URL Analysis page
+    if (currentPath.includes('/single-url') || currentPath.includes('/analyze_single_url')) {
+      const singleUrlNav = document.querySelector('.sidebar-nav li[data-tab="single-url"]');
+      if (singleUrlNav) singleUrlNav.classList.add('active');
+      return;
+    }
+    
+    // Check for Dashboard sections with hash
+    if (currentPath.includes('/dashboard') && currentHash) {
+      if (currentHash.includes('analysis-history')) {
+        const historyNav = document.querySelector('.sidebar-nav li[data-tab="analysis-history"]');
+        if (historyNav) historyNav.classList.add('active');
+        return;
+      } else if (currentHash.includes('plan-details')) {
+        const planNav = document.querySelector('.sidebar-nav li[data-tab="plan-details"]');
+        if (planNav) planNav.classList.add('active');
+        return;
+      } else if (currentHash.includes('performance')) {
+        const perfNav = document.querySelector('.sidebar-nav li[data-tab="performance"]');
+        if (perfNav) perfNav.classList.add('active');
+        return;
+      }
+    }
+    
+    // Check for Dashboard main page
+    if (currentPath.includes('/dashboard')) {
+      const dashboardNav = document.querySelector('.sidebar-nav li[data-tab="dashboard"]');
+      if (dashboardNav) dashboardNav.classList.add('active');
+      return;
+    }
+  }
+  
+  // Set active state on page load
+  setActiveNavItem();
+  
+  // Watch for hash changes
+  window.addEventListener('hashchange', function() {
+    setActiveNavItem();
+  });
+  
+  // Watch for navigation (back/forward buttons)
+  window.addEventListener('popstate', function() {
+    setActiveNavItem();
+  });
+});
+</script>
+
+
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="dashboard-main">
+      <!-- Top Bar with User Info -->
+      <div class="top-bar-info">
+        <div class="page-head-main">
+          <h1><i class="bi bi-activity"></i> {% block page_title %}SEO Analysis Dashboard{% endblock %}</h1>
+        </div>
+        <div class="user-profile-main">
+          <div class="user-avatar-main">{{ current_user.name[0]|upper if current_user.name else current_user.email[0]|upper }}</div>
+          <div class="user-info-main">
+            <div class="user-name-main">{{ current_user.name if current_user.name else current_user.email.split('@')[0] }}</div>
+            <div class="user-email-main">{{ current_user.email }}</div>
+          </div>
+          <a href="{{ url_for('logout') }}" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+      </div>
+
+      <!-- Main Content Block - Child templates will inject content here -->
+      {% block main_content %}{% endblock %}
+    </main>
+  </div>
+
+  <script>
+    // User dropdown functionality (if you still want it)
+    document.addEventListener('DOMContentLoaded', function() {
+      // Sidebar navigation active state management
+      const currentPath = window.location.pathname;
+      const navLinks = document.querySelectorAll('.sidebar-nav li a');
+      
+      navLinks.forEach(link => {
+        if (link.getAttribute('href') !== '#' && currentPath.includes(link.getAttribute('href'))) {
+          link.closest('li').classList.add('active');
+        }
+      });
+    });
+  </script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

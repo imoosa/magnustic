@@ -1,14 +1,27 @@
-{% extends "base.html" %}
-{% block body %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Magnustic</title>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <link rel="icon" href="{{ url_for('static', filename='assets/images/favicon.png') }}" type="image/png">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/style.css') }}">
+</head>
+<body class="login-page">
   
 
 <div class="split-login-wrapper">
   <!-- Left Panel (Login Form) -->
   <div class="login-form-panel">
     <div class="moz-login-container">
-      <img src="{{ url_for('static', filename='assets/images/magnustic300x76.png') }}" alt="Logo" class="login-logo-img">
+      <img src="{{ url_for('static', filename='assets/images/magnustic-logo.png') }}" alt="Logo" class="login-logo-img">
       
-      <h1 class="moz-welcome">Welcome! Log in here.</h1>
+      <h1 class="moz-welcome"><span style="color: #fff;">Welcome!</span> Log in here.</h1>
       
       <div class="moz-signup-prompt">
         Haven't signed up? <a href="{{ url_for('register') }}">Create an account</a>
@@ -78,7 +91,7 @@
       </div>
       
       <div class="feature-card">
-        <h3>MagnusTic SEO Suite</h3>
+        <h3><span style="color: #fff;">MagnusTic</span> SEO Suite</h3>
         <ul>
           <li>
             <span class="feature-icon">⚡</span>
@@ -99,4 +112,5 @@
 </div>
 
 
-{% endblock %}
+</body>
+</html>

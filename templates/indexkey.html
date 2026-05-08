@@ -428,508 +428,291 @@
                     </div>
                 </div>
 
-<!-- ═══════════════════════════════════════════════════════
-     KEYWORD IDEAS SECTION  (v5 — page-type-aware engine)
-     Calls /keyword-ideas on page load when results are shown.
-     Displays: SHORT/BROAD (top 10) + LONG-TAIL (top 10)
-════════════════════════════════════════════════════════ -->
-{% if from_post and metrics and metrics["URL"] %}
-<div class="ki-section" id="keywordIdeasSection">
-
-    <!-- Section header -->
-    <div class="ki-header">
-        <div class="ki-header-left">
-            <div class="ki-icon-wrap">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-                </svg>
-            </div>
-            <div>
-                <h2 class="ki-title">Keyword <span>Ideas</span></h2>
-                <p class="ki-subtitle" id="kiSubtitle">Analysing page&hellip;</p>
-            </div>
+<!-- Updated keyword_suggestions.html with proper structure -->
+<div class="keyword-suggestions-section mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-lightbulb"></i> Keyword Suggestions
+                {% if keyword_analysis and keyword_analysis.get('niche_confidence', 0) > 50 %}
+                <span class="badge bg-success ms-2">High Relevance</span>
+                {% endif %}
+            </h5>
         </div>
-        <div class="ki-meta" id="kiMeta" style="display:none;">
-            <span class="ki-badge ki-badge-type" id="kiBadgeType"></span>
-            <span class="ki-badge ki-badge-niche" id="kiBadgeNiche"></span>
+        <div class="card-body">
+            
+            <!-- Success Message when analysis is available -->
+            {% if keyword_analysis and keyword_analysis.success %}
+            
+            <!-- Page Type Detection Info -->
+            {% if keyword_analysis.get('page_type_label') %}
+            <div class="alert alert-info mb-3">
+                <strong><i class="fas fa-tag"></i> Page Type Detected:</strong> 
+                {{ keyword_analysis.get('page_type_label', 'Unknown') }}
+                <br>
+                <small class="text-muted">
+                    {% if keyword_analysis.get('has_meta_description') %}
+                    Meta description found ✓
+                    {% else %}
+                    Analyzed from body content
+                    {% endif %}
+                </small>
+            </div>
+            {% endif %}
+            
+            <!-- SHORT / BROAD KEYWORDS Section -->
+            {% if keyword_analysis.broad_keywords and keyword_analysis.broad_keywords|length > 0 %}
+            <div class="keyword-analysis-section">
+                <h5 class="mb-3">
+                    <i class="fas fa-chart-simple text-primary"></i> 
+                    SHORT / BROAD KEYWORDS
+                    <span class="badge bg-secondary ms-2">{{ keyword_analysis.broad_keywords|length }}</span>
+                </h5>
+                <div class="keyword-list">
+                    {% for kw in keyword_analysis.broad_keywords[:10] %}
+                    <span class="keyword-tag" data-keyword="{{ kw.keyword }}">
+                        {{ kw.keyword }}
+                        {% if kw.frequency %}
+                        <small class="text-muted">({{ kw.frequency }})</small>
+                        {% endif %}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- LONG-TAIL / TARGETED KEYWORDS Section -->
+            {% if keyword_analysis.longtail_keywords and keyword_analysis.longtail_keywords|length > 0 %}
+            <div class="keyword-analysis-section">
+                <h5 class="mb-3">
+                    <i class="fas fa-chart-line text-success"></i> 
+                    LONG-TAIL / TARGETED KEYWORDS
+                    <span class="badge bg-secondary ms-2">{{ keyword_analysis.longtail_keywords|length }}</span>
+                </h5>
+                <div class="keyword-list">
+                    {% for kw in keyword_analysis.longtail_keywords[:10] %}
+                    <span class="keyword-tag keyword-tag-longtail" data-keyword="{{ kw.keyword }}">
+                        {{ kw.keyword }}
+                        {% if kw.frequency %}
+                        <small class="text-muted">({{ kw.frequency }})</small>
+                        {% endif %}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Fallback when no keywords found -->
+            {% if (not keyword_analysis.broad_keywords or keyword_analysis.broad_keywords|length == 0) and (not keyword_analysis.longtail_keywords or keyword_analysis.longtail_keywords|length == 0) %}
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i> 
+                No keywords could be extracted from this page. The content may be too short or not text-heavy enough.
+            </div>
+            {% endif %}
+            
+            {% else %}
+            <!-- Error state when analysis failed -->
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i> 
+                {% if keyword_analysis and keyword_analysis.error %}
+                {{ keyword_analysis.error }}
+                {% else %}
+                Keyword analysis not available. Please refresh or try again.
+                {% endif %}
+            </div>
+            {% endif %}
+            
         </div>
     </div>
-
-    <!-- Loading state -->
-    <div class="ki-loading" id="kiLoading">
-        <div class="ki-spinner"></div>
-        <p>Fetching keyword ideas for <strong>{{ metrics["URL"][0]|replace("https://","") }}</strong>&hellip;</p>
-        <p class="ki-loading-note">This may take 20–40 seconds — we're querying Google Autocomplete in real time.</p>
-    </div>
-
-    <!-- Error state -->
-    <div class="ki-error" id="kiError" style="display:none;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
-            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        <span id="kiErrorMsg">Could not fetch keyword ideas.</span>
-        <button class="ki-retry-btn" onclick="fetchKeywordIdeas()">Retry</button>
-    </div>
-
-    <!-- Results -->
-    <div class="ki-results" id="kiResults" style="display:none;">
-
-        <!-- SHORT / BROAD KEYWORDS -->
-        <div class="ki-card ki-card-broad">
-            <div class="ki-card-header">
-                <div class="ki-card-icon ki-card-icon-broad">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
-                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-                    </svg>
-                </div>
-                <div>
-                    <h3 class="ki-card-title">Short / Broad Keywords</h3>
-                    <p class="ki-card-desc">2-word head terms — high volume, good for brand visibility</p>
-                </div>
-                <span class="ki-count-badge ki-count-broad" id="kiBroadCount">0</span>
-            </div>
-            <div class="ki-tags" id="kiBroadTags"></div>
-        </div>
-
-        <!-- LONG-TAIL / TARGETED KEYWORDS -->
-        <div class="ki-card ki-card-longtail">
-            <div class="ki-card-header">
-                <div class="ki-card-icon ki-card-icon-longtail">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
-                        <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
-                        <line x1="6" y1="20" x2="6" y2="14"/>
-                    </svg>
-                </div>
-                <div>
-                    <h3 class="ki-card-title">Long-Tail / Targeted Keywords</h3>
-                    <p class="ki-card-desc">Specific 3+ word phrases — lower competition, easier to rank</p>
-                </div>
-                <span class="ki-count-badge ki-count-longtail" id="kiLongtailCount">0</span>
-            </div>
-            <div class="ki-tags" id="kiLongtailTags"></div>
-        </div>
-
-        <!-- QUESTION / INTENT KEYWORDS -->
-        <div class="ki-card ki-card-question">
-            <div class="ki-card-header">
-                <div class="ki-card-icon ki-card-icon-question">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
-                        <circle cx="12" cy="12" r="10"/>
-                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-                        <line x1="12" y1="17" x2="12.01" y2="17"/>
-                    </svg>
-                </div>
-                <div>
-                    <h3 class="ki-card-title">Question / Intent Keywords</h3>
-                    <p class="ki-card-desc">How, what, why queries — great for featured snippets & FAQs</p>
-                </div>
-                <span class="ki-count-badge ki-count-question" id="kiQuestionCount">0</span>
-            </div>
-            <div class="ki-tags" id="kiQuestionTags"></div>
-        </div>
-
-        <!-- Copy all button -->
-        <div class="ki-actions">
-            <button class="ki-copy-all-btn" id="kiCopyAll" onclick="copyAllKeywords()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                </svg>
-                Copy All Keywords
-            </button>
-        </div>
-    </div>
-
-</div><!-- /ki-section -->
+</div>
 
 <style>
-/* ── Keyword Ideas Section ─────────────────────────── */
-.ki-section {
-    margin: 32px 0;
-    background: #0f0f0f;
-    border: 1px solid #1e1e1e;
-    border-radius: 16px;
-    overflow: hidden;
+.keyword-analysis-section {
+    margin: 20px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
 }
 
-.ki-header {
+.keyword-analysis-section:first-child {
+    margin-top: 0;
+}
+
+.keyword-analysis-section:last-child {
+    margin-bottom: 0;
+}
+
+.keyword-list {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
     flex-wrap: wrap;
-    gap: 12px;
-    padding: 22px 28px;
-    background: #141414;
-    border-bottom: 1px solid #1e1e1e;
-}
-
-.ki-header-left {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-}
-
-.ki-icon-wrap {
-    width: 44px;
-    height: 44px;
-    background: rgba(218, 0, 0, 0.12);
-    border: 1px solid rgba(218, 0, 0, 0.25);
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #DA0000;
-    flex-shrink: 0;
-}
-
-.ki-title {
-    font-size: 20px;
-    font-weight: 700;
-    color: #f8f8f8;
-    margin: 0 0 2px;
-}
-.ki-title span { color: #DA0000; }
-
-.ki-subtitle {
-    font-size: 13px;
-    color: #666;
-    margin: 0;
-}
-
-.ki-meta { display: flex; gap: 8px; flex-wrap: wrap; }
-
-.ki-badge {
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.3px;
-}
-.ki-badge-type  { background: rgba(218,0,0,0.12);   color: #ff4d4d; border: 1px solid rgba(218,0,0,0.2); }
-.ki-badge-niche { background: rgba(59,130,246,0.1); color: #60a5fa; border: 1px solid rgba(59,130,246,0.2); }
-
-/* Loading */
-.ki-loading { padding: 48px 28px; text-align: center; color: #888; }
-.ki-loading p { margin: 8px 0 0; font-size: 14px; }
-.ki-loading-note { font-size: 12px; color: #555; margin-top: 6px !important; }
-
-.ki-spinner {
-    width: 36px; height: 36px;
-    border: 3px solid #222;
-    border-top-color: #DA0000;
-    border-radius: 50%;
-    animation: kiSpin 0.8s linear infinite;
-    margin: 0 auto 16px;
-}
-@keyframes kiSpin { to { transform: rotate(360deg); } }
-
-/* Error */
-.ki-error {
-    padding: 20px 28px;
-    display: flex; align-items: center; gap: 12px;
-    background: rgba(218,0,0,0.06);
-    border-top: 1px solid rgba(218,0,0,0.12);
-    color: #ff6b6b; font-size: 14px;
-}
-.ki-retry-btn {
-    margin-left: auto;
-    padding: 6px 16px;
-    background: rgba(218,0,0,0.15);
-    border: 1px solid rgba(218,0,0,0.3);
-    color: #ff4d4d; border-radius: 8px;
-    cursor: pointer; font-size: 13px; transition: background 0.2s;
-}
-.ki-retry-btn:hover { background: rgba(218,0,0,0.25); }
-
-/* Results */
-.ki-results { padding: 24px 28px; display: flex; flex-direction: column; gap: 20px; }
-
-/* Card */
-.ki-card { border-radius: 12px; border: 1px solid #1e1e1e; overflow: hidden; }
-
-.ki-card-header {
-    display: flex; align-items: flex-start; gap: 14px;
-    padding: 16px 20px 14px;
-    background: #141414; border-bottom: 1px solid #1e1e1e;
-}
-.ki-card-icon {
-    width: 34px; height: 34px; border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; margin-top: 2px;
-}
-.ki-card-icon-broad    { background: rgba(218,0,0,0.1);    color: #DA0000;  border: 1px solid rgba(218,0,0,0.2); }
-.ki-card-icon-longtail { background: rgba(34,197,94,0.1);  color: #22c55e;  border: 1px solid rgba(34,197,94,0.2); }
-.ki-card-icon-question { background: rgba(251,191,36,0.1); color: #fbbf24;  border: 1px solid rgba(251,191,36,0.2); }
-
-.ki-card-title { font-size: 14px; font-weight: 700; color: #e8e8e8; margin: 0 0 3px; }
-.ki-card-desc  { font-size: 12px; color: #555; margin: 0; }
-
-.ki-count-badge {
-    margin-left: auto;
-    min-width: 26px; height: 26px; padding: 0 9px;
-    border-radius: 13px; font-size: 12px; font-weight: 700;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-}
-.ki-count-broad    { background: rgba(218,0,0,0.15);    color: #ff4d4d; }
-.ki-count-longtail { background: rgba(34,197,94,0.12);  color: #22c55e; }
-.ki-count-question { background: rgba(251,191,36,0.12); color: #fbbf24; }
-
-/* Keyword rows (ranked list with progress bar) */
-.ki-tags { padding: 6px 0; background: #0f0f0f; }
-
-.ki-row {
-    display: grid;
-    grid-template-columns: 26px 1fr 120px 28px;
-    align-items: center;
     gap: 10px;
-    padding: 10px 20px;
+    margin-bottom: 5px;
+}
+
+.keyword-tag {
+    background: #ffffff;
+    padding: 8px 16px;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #495057;
+    border: 1px solid #dee2e6;
+    transition: all 0.2s ease;
     cursor: pointer;
-    transition: background 0.15s;
-    border-bottom: 1px solid #161616;
-}
-.ki-row:last-child { border-bottom: none; }
-.ki-row:hover { background: #161616; }
-
-.ki-row.ki-copied { background: rgba(34,197,94,0.06); }
-
-.ki-rank {
-    font-size: 12px; font-weight: 600; color: #444;
-    text-align: right; flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
 }
 
-.ki-kw-text {
-    font-size: 13px; font-weight: 500;
-    color: #d0d0d0;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+.keyword-tag:hover {
+    background: #007bff;
+    border-color: #007bff;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,123,255,0.2);
 }
-.ki-row:hover .ki-kw-text { color: #fff; }
-.ki-row.ki-copied .ki-kw-text { color: #4ade80; }
 
-.ki-bar-wrap {
-    height: 6px; background: #1e1e1e; border-radius: 3px; overflow: hidden;
+.keyword-tag:hover .text-muted {
+    color: rgba(255,255,255,0.8) !important;
 }
-.ki-bar {
-    height: 100%; border-radius: 3px;
-    transition: width 0.5s ease;
+
+.keyword-tag-longtail {
+    background: #e8f5e9;
+    border-color: #c8e6c9;
+    color: #2e7d32;
 }
-.ki-bar-broad    { background: linear-gradient(to right, #7f0000, #DA0000); }
-.ki-bar-longtail { background: linear-gradient(to right, #15803d, #22c55e); }
-.ki-bar-question { background: linear-gradient(to right, #92400e, #fbbf24); }
 
-.ki-copy-btn {
-    width: 26px; height: 26px;
-    background: transparent; border: 1px solid #222;
-    border-radius: 6px; cursor: pointer; color: #444;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.15s; flex-shrink: 0;
+.keyword-tag-longtail:hover {
+    background: #28a745;
+    border-color: #28a745;
+    color: white;
 }
-.ki-copy-btn:hover { background: #1e1e1e; color: #aaa; border-color: #333; }
-.ki-row.ki-copied .ki-copy-btn { color: #4ade80; border-color: rgba(34,197,94,0.3); }
 
-/* Empty state */
-.ki-empty { padding: 16px 20px; font-size: 13px; color: #555; font-style: italic; }
-
-/* Copy-all */
-.ki-actions { display: flex; justify-content: flex-end; padding-top: 4px; }
-.ki-copy-all-btn {
-    display: inline-flex; align-items: center; gap: 7px;
-    padding: 9px 20px;
-    background: #1a1a1a; border: 1px solid #2a2a2a;
-    color: #aaa; border-radius: 10px;
-    font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;
+.keyword-tag.copied {
+    background: #28a745;
+    border-color: #28a745;
+    color: white;
 }
-.ki-copy-all-btn:hover { background: rgba(218,0,0,0.1); border-color: rgba(218,0,0,0.3); color: #ff6b6b; }
-.ki-copy-all-btn.ki-all-copied { background: rgba(34,197,94,0.12); border-color: rgba(34,197,94,0.3); color: #4ade80; }
 
-@media (max-width: 640px) {
-    .ki-header  { padding: 16px 18px; }
-    .ki-results { padding: 16px 18px; }
-    .ki-row { grid-template-columns: 22px 1fr 70px 26px; gap: 8px; padding: 9px 14px; }
-    .ki-kw-text { font-size: 12px; }
-    .ki-title   { font-size: 17px; }
+/* Copy animation */
+@keyframes copyFlash {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.keyword-tag:active {
+    transform: scale(0.98);
+}
+
+/* Tooltip style for copy feedback */
+.keyword-tag::after {
+    content: "Click to copy";
+    position: absolute;
+    background: #333;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    margin-bottom: 8px;
+}
+
+.keyword-tag:hover::after {
+    opacity: 0.7;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .keyword-tag {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+    
+    .keyword-analysis-section h5 {
+        font-size: 16px;
+    }
 }
 </style>
 
 <script>
-(function () {
-    /* ── Grab the analysed URL from the already-rendered metrics ── */
-    const ANALYSED_URL = {{ metrics["URL"][0] | tojson }};
-    const CSRF_TOKEN   = document.querySelector('[name="csrf_token"]')
-                         ? document.querySelector('[name="csrf_token"]').value
-                         : '';
-
-    /* ── Page-type labels ─────────────────────────────────────── */
-    const PAGE_TYPE_LABELS = {
-        homepage:      '🏠 Homepage',
-        blog_post:     '📝 Blog Post',
-        blog_listing:  '📋 Blog Listing',
-        product_page:  '🛒 Product Page',
-        service_page:  '🔧 Service Page',
-        category_page: '🗂️ Category Page',
-        unknown:       '❓ Unknown',
-    };
-
-    /* ── DOM refs ─────────────────────────────────────────────── */
-    const elLoading       = document.getElementById('kiLoading');
-    const elError         = document.getElementById('kiError');
-    const elErrorMsg      = document.getElementById('kiErrorMsg');
-    const elResults       = document.getElementById('kiResults');
-    const elSubtitle      = document.getElementById('kiSubtitle');
-    const elMeta          = document.getElementById('kiMeta');
-    const elBadgeType     = document.getElementById('kiBadgeType');
-    const elBadgeNiche    = document.getElementById('kiBadgeNiche');
-    const elBroadTags     = document.getElementById('kiBroadTags');
-    const elLongtailTags  = document.getElementById('kiLongtailTags');
-    const elQuestionTags  = document.getElementById('kiQuestionTags');
-    const elBroadCount    = document.getElementById('kiBroadCount');
-    const elLongtailCount = document.getElementById('kiLongtailCount');
-    const elQuestionCount = document.getElementById('kiQuestionCount');
-
-    /* ── Build one keyword row  (rank + keyword + bar + copy) ── */
-    function makeRow(kw, rank, type, maxRank) {
-        // Bar width: first keyword = 100%, rest scale proportionally by rank
-        const barPct = Math.max(30, Math.round(100 - ((rank - 1) / maxRank) * 65));
-
-        const row = document.createElement('div');
-        row.className = `ki-row ki-row-${type}`;
-
-        row.innerHTML = `
-            <span class="ki-rank">${rank}</span>
-            <span class="ki-kw-text">${kw}</span>
-            <div class="ki-bar-wrap">
-                <div class="ki-bar ki-bar-${type}" style="width:${barPct}%"></div>
-            </div>
-            <button class="ki-copy-btn" aria-label="Copy keyword" title="Copy">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                </svg>
-            </button>`;
-
-        row.querySelector('.ki-copy-btn').addEventListener('click', () => copyRow(row, kw));
-        row.addEventListener('click', (e) => {
-            if (!e.target.closest('.ki-copy-btn')) copyRow(row, kw);
+document.addEventListener('DOMContentLoaded', function() {
+    // Make all keyword tags copyable
+    const keywordTags = document.querySelectorAll('.keyword-tag');
+    
+    keywordTags.forEach(tag => {
+        tag.addEventListener('click', async function(e) {
+            e.stopPropagation();
+            
+            // Get keyword text (remove frequency number if present)
+            let keywordText = this.textContent.trim();
+            // Remove frequency numbers like "(12)" from the end
+            keywordText = keywordText.replace(/\s*\(\d+\)\s*$/, '');
+            
+            if (keywordText && keywordText !== 'N/A') {
+                try {
+                    await navigator.clipboard.writeText(keywordText);
+                    
+                    // Show copied feedback
+                    const originalText = this.innerHTML;
+                    const originalBg = this.style.background;
+                    const originalColor = this.style.color;
+                    
+                    this.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    this.classList.add('copied');
+                    this.style.background = '#28a745';
+                    this.style.color = 'white';
+                    
+                    setTimeout(() => {
+                        this.innerHTML = originalText;
+                        this.classList.remove('copied');
+                        this.style.background = originalBg;
+                        this.style.color = originalColor;
+                    }, 1500);
+                    
+                } catch (err) {
+                    console.error('Failed to copy:', err);
+                    // Fallback for older browsers
+                    const textarea = document.createElement('textarea');
+                    textarea.value = keywordText;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    
+                    // Show feedback
+                    const originalText = this.innerHTML;
+                    this.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    setTimeout(() => {
+                        this.innerHTML = originalText;
+                    }, 1500);
+                }
+            }
         });
-        return row;
-    }
-
-    /* ── Copy single row ─────────────────────────────────────── */
-    async function copyRow(rowEl, text) {
-        try { await navigator.clipboard.writeText(text); }
-        catch {
-            const ta = document.createElement('textarea');
-            ta.value = text; document.body.appendChild(ta);
-            ta.select(); document.execCommand('copy');
-            document.body.removeChild(ta);
-        }
-        rowEl.classList.add('ki-copied');
-        const btn = rowEl.querySelector('.ki-copy-btn');
-        const origHTML = btn.innerHTML;
-        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg>`;
-        setTimeout(() => { rowEl.classList.remove('ki-copied'); btn.innerHTML = origHTML; }, 1400);
-    }
-
-    /* ── Copy all keywords ────────────────────────────────────── */
-    window.copyAllKeywords = async function () {
-        const kws = Array.from(document.querySelectorAll('#kiResults .ki-kw-text'))
-                        .map(el => el.textContent.trim()).filter(Boolean);
-        const text = kws.join(', ');
-        try { await navigator.clipboard.writeText(text); }
-        catch {
-            const ta = document.createElement('textarea');
-            ta.value = text; document.body.appendChild(ta);
-            ta.select(); document.execCommand('copy');
-            document.body.removeChild(ta);
-        }
-        const btn = document.getElementById('kiCopyAll');
-        btn.classList.add('ki-all-copied');
-        btn.textContent = `✓ Copied ${kws.length} keywords`;
-        setTimeout(() => {
-            btn.classList.remove('ki-all-copied');
-            btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy All Keywords`;
-        }, 2500);
-    };
-
-    /* ── Main fetch function ─────────────────────────────────── */
-    window.fetchKeywordIdeas = async function () {
-        elLoading.style.display = 'block';
-        elError.style.display   = 'none';
-        elResults.style.display = 'none';
-        elSubtitle.textContent  = 'Analysing page…';
-        elMeta.style.display    = 'none';
-
-        try {
-            const res = await fetch('/keyword-ideas', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': CSRF_TOKEN
-                },
-                body: JSON.stringify({ url: ANALYSED_URL })
-            });
-
-            if (!res.ok) throw new Error(`Server error: ${res.status}`);
-            const data = await res.json();
-            if (data.error) throw new Error(data.error);
-
-            /* ── Populate meta badges ── */
-            const ptLabel = PAGE_TYPE_LABELS[data.page_type] || data.page_type || 'Unknown';
-            elBadgeType.textContent  = ptLabel;
-            elBadgeNiche.textContent = data.niche || 'General';
-            elMeta.style.display     = 'flex';
-            const total = (data.short_broad||[]).length + (data.long_tail||[]).length + (data.questions||[]).length;
-            elSubtitle.textContent   = `${total} keyword ideas found`;
-
-            /* ── Render broad rows ── */
-            elBroadTags.innerHTML = '';
-            const broadList = (data.short_broad || []).slice(0, 10);
-            if (broadList.length) {
-                broadList.forEach((item, i) => elBroadTags.appendChild(makeRow(item.keyword, i+1, 'broad', broadList.length)));
-            } else {
-                elBroadTags.innerHTML = '<span class="ki-empty">No broad keywords found for this page.</span>';
-            }
-            elBroadCount.textContent = broadList.length;
-
-            /* ── Render long-tail rows ── */
-            elLongtailTags.innerHTML = '';
-            const longtailList = (data.long_tail || []).slice(0, 10);
-            if (longtailList.length) {
-                longtailList.forEach((item, i) => elLongtailTags.appendChild(makeRow(item.keyword, i+1, 'longtail', longtailList.length)));
-            } else {
-                elLongtailTags.innerHTML = '<span class="ki-empty">No long-tail keywords found for this page.</span>';
-            }
-            elLongtailCount.textContent = longtailList.length;
-
-            /* ── Render question rows ── */
-            elQuestionTags.innerHTML = '';
-            const questionList = (data.questions || []).slice(0, 10);
-            if (questionList.length) {
-                questionList.forEach((item, i) => elQuestionTags.appendChild(makeRow(item.keyword, i+1, 'question', questionList.length)));
-            } else {
-                elQuestionTags.innerHTML = '<span class="ki-empty">No question keywords found for this page.</span>';
-            }
-            elQuestionCount.textContent = questionList.length;
-
-            elLoading.style.display = 'none';
-            elResults.style.display = 'flex';
-
-        } catch (err) {
-            console.error('Keyword ideas error:', err);
-            elLoading.style.display = 'none';
-            elErrorMsg.textContent  = err.message || 'Could not fetch keyword ideas.';
-            elError.style.display   = 'flex';
-        }
-    };
-
-    /* ── Auto-run when results page loads ────────────────────── */
-    document.addEventListener('DOMContentLoaded', function () {
-        const section = document.getElementById('keywordIdeasSection');
-        if (section) fetchKeywordIdeas();
     });
-})();
+    
+    // Add keyboard navigation for keyword tags
+    keywordTags.forEach(tag => {
+        tag.setAttribute('role', 'button');
+        tag.setAttribute('tabindex', '0');
+        tag.setAttribute('aria-label', 'Copy keyword to clipboard');
+        
+        tag.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.click();
+            }
+        });
+    });
+});
 </script>
-{% endif %}
-<!-- ── END KEYWORD IDEAS SECTION ─────────────────────── -->
 
                 <!-- PageSpeed Metrics -->
                 <div class="metrics-horizontal-wrapper">
